@@ -10,14 +10,15 @@ import os
 from classes import *
 import sys 
 import gc
-
+sys.exit()
 gc.collect(generation=2)
 
 #VITRO
-tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\"
-traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\comparaison_bubbles_FFT_goodKPa\\pression_test\\"
 tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\'
 traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\comparaison_bubbles_FFT_new\\'
+tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_6\\"
+traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_6\\comparaison_bubbles_FFT_goodKPa\\pression_test\\"
+traj="C:\\Users\\PM263553\\Desktop\\"
 
 
 path(traj)
@@ -40,6 +41,7 @@ pression_max = 1500
 pression_min = 1
 bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
 bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
+bitpress = int(np.round(((400-fit[1])/fit[0])))
 nbit=[1,bitmax]
 
 
@@ -83,13 +85,20 @@ nbit=[1,bitmax]
 for j in range(nexp):
     test_m_exp.creat_expe()
 
-for i in range(0,nexp):
+for i in range(1,nexp):
     print("\nloading data : "+doss[i])
     dossier=tra+doss[i]
     #dossier="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\small_data\\"+doss[i]#plop
     traj_comp = tra+doss[i]
     path(traj_comp)
-    data = np.load(dossier+'\\data_order.npy')
+    data = np.load(dossier+'\\data_order.npy') #
+    #amp = np.load(dossier+'\\amp.npy') #_order
+    sys.exit()
+    temp_samp = temp_sample(25000000,1500000,data[bitpress*30+15],start=start,end=end)
+    temp_samp.plot(traj)
+    sys.exit()
+    
+    
     test_exp=experiment(25000000,1500000,start=start,end=end)
     print("adding pulses exp")
     test_exp.add_pulses(data[:30*(bitmax-1)], spacer =100e3)
@@ -211,4 +220,44 @@ for i in range(nexp):
     test_exp.add_pulses(data, spacer =100e3)
     test_exp.plot_indice_component(traj+doss[i])
 
+
+#%%
+
+tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\rats\\expe_postraitement\\20211125_PCDsig_Rat2\\"
+traj="C:\\Users\\PM263553\\Desktop\\bis"
+start=0
+end=-1
+
+i=40
+Fe= 2*15.625e6
+
+data = np.load(tra+'PCD_20211125_Bubbles.npy') #
+Y = data[:,200]
+#data = np.fromfile(tra+"PCD_10112021_Bubbles_{}.dat".format(i),dtype=float)
+temp_samp = temp_sample(25000000,1500000,Y,start=start,end=end)
+temp_samp.plot(traj)
+Y = data[:,200]/2.5/10.
+X = np.arange(len(Y))/31250.
+plt.plot(X,Y)
+plt.xlabel("Temps (ms)", fontsize = 20)
+plt.ylabel("Amplitude (mV)", fontsize = 20)
+plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+plt.title("Exemple de signal ultrasonore enregistré", fontsize = 30, fontweight="bold")
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+
+#%%
+
+
+
+
+Y = data[1500,:40000]
+X = np.arange(len(Y))/25000.
+plt.plot(X,Y)
+plt.xlabel("Temps (ms)", fontsize = 20)
+plt.ylabel("Amplitude (mV)", fontsize = 20)
+plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
 

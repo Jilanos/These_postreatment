@@ -630,6 +630,10 @@ class experiment():
          
     def plot_indice_bis(self,nom,chemin,amp = False):
         path(chemin)
+        chemin_log=chemin+'\\log\\'
+        chemin_lin=chemin+'\\linear\\'
+        path(chemin_log)
+        path(chemin_lin)
         plot=np.zeros((4,self.n_pulse))
         n_plot = 4
         temp = np.zeros((2,n_plot))
@@ -669,7 +673,7 @@ class experiment():
             host.set_yscale('linear')
             # plt.savefig(chemin_lin+nom_img[i]+'_linear.png',bbox_inches='tight')  
             # host.set_yscale('log')
-        plt.savefig(chemin+nom+'_linear.png',bbox_inches='tight') 
+        plt.savefig(chemin_log+nom_img[i]+'_linear.png',bbox_inches='tight') 
         plt.close("all")    
         
         
