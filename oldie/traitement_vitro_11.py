@@ -16,12 +16,12 @@ gc.collect(generation=2)
 #VITRO
 tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\'
 traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\comparaison_bubbles_FFT_new\\'
-tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_11\\"
-traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_11\\plot_post_treatment\\"
+tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_18\\"
+traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_18\\plot_post_treatment\\"
 path(traj)
      
 doss=["bubbles_0_75","bubbles_99_75","bubbles_50_75"]
-doss=["bubbles_0_75","bubbles_50_75","bubbles_99_75"]  
+doss=["bubbles_0_20min_300","bubbles_50_75","bubbles_99_75"]  
 # =============================================================================
 # start,end = 1100,23437 + 1100     #zone rouge
 # start,end = 23437 + 1100 ,312800     #zone Vide  
@@ -32,7 +32,7 @@ start,end = 27000,200000
 start,end = 0,344983
 
 test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-nexp=3
+nexp=1
 fit = np.array([4.66745471*2, 5.80567673])
 fit = np.array([7.92060316*2, 2.42161125])
 pression_max = 1500
@@ -40,10 +40,10 @@ pression_min = 1
 bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
 bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
 bitpress = int(np.round(((400-fit[1])/fit[0])))
-press_max = 75*fit[0]+fit[1]
+press_max = 150*fit[0]+fit[1]
 nbit=[1,bitmax]
 
-legend=["Eau pure","Sonovue dilué 100 fois","Sonovue dilué 50 fois"]
+legend=["Eau pure 300bit","Sonovue dilué 100 fois","Sonovue dilué 50 fois"]
 nom = "test_val_individuelles"
 doss_indi = traj+nom+"\\"
 
@@ -72,7 +72,8 @@ for i in range(0,nexp):
     print('done')
     del data
     gc.collect(generation=2)
-    
+
+ 
 x_n_fenetre = [i for i in range(len(x_press))]  
 nom = "ramp_fenêtre"
 dossier = traj+nom+"\\"

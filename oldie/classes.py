@@ -697,9 +697,9 @@ class experiment():
             plot_raw[k,:,1]=plot_raw[k,:,0]+np.std(temp[k], axis=0)
             plot_raw[k,:,2]=plot_raw[k,:,0]-np.std(temp[k], axis=0)
         for k in range(n_plot):
-            plot[k]=plot_raw[k]-np.min(plot_raw[k])
+            plot[k]=plot_raw[k]-np.min(plot_raw[k,:,0])
         for k in range(n_plot):
-            plot[k]=plot[k]/np.max(plot[k])
+            plot[k]=plot[k]/np.max(plot[k,:,0])
             
             
         plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(7),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
@@ -719,7 +719,7 @@ class experiment():
         #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
         Ymax = 1.01*np.amax(plot[:,:,1])
         Ymin = 0.99*np.amin(plot[:,:,2])
-        plt.ylim([Ymin, Ymax])    
+        plt.ylim([-0.1,1.1])    
         plt.grid(True)
         plt.tight_layout()
         plt.yscale('linear')

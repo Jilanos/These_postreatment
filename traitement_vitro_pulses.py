@@ -16,36 +16,118 @@ gc.collect(generation=2)
 #VITRO
 tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\'
 traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\comparaison_bubbles_FFT_new\\'
-tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\'
-traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\comparaison_bubbles_FFT_new\\'
+tra = 'C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\'
+traj='C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_PULSE\\'
 
 
 
 path(traj)
 
-doss=["bubbles_0_75","bubbles_240_75","bubbles_80_75","bubbles_27_75"]      
-# =============================================================================
-# start,end = 1100,23437 + 1100     #zone rouge
-# start,end = 23437 + 1100 ,312800     #zone Vide  
-# start,end = 1100,31280     #zone verte    
-# =============================================================================
+doss=["PULSE_0_40","PULSE_666_40","bubbles_80_75","bubbles_27_75"]   
+legend=["No Mbs","Dilution 666","Dilution 80","Dilution 27"]   
 
-start,end = 27000,200000
 start,end = 10000,236000
+start,end = 0,-1
 
 test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-nexp=4
+nexp=2
 fit = np.array([4.66745471*2, 5.80567673])
 fit = np.array([7.92060316*2, 2.42161125])
-pression_max = 1000
+pression_max = 500
 pression_min = 1
 bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
 bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
 bitpress = int(np.round(((400-fit[1])/fit[0])))
 nbit=[1,bitmax]
 
+rep = 6
+order = True
 
 
+for j in range(nexp):
+    test_m_exp.creat_expe()
+
+for i in range(nexp):
+    print("\nloading data : "+doss[i])
+    dossier=tra+doss[i]
+    #dossier="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\small_data\\"+doss[i]#plop
+    traj_comp = tra+doss[i]
+    path(traj_comp)
+    if not(order):
+        data = np.load(dossier+'\\data.npy') #
+        amp = np.load(dossier+'\\amp.npy') #_order
+        print("Reordering")
+        data, amp = reorder(data,amp)
+        print("Saving ordered datas")
+        np.save(dossier+'\\data_o.npy',data)
+        np.save(dossier+'\\amp_o.npy',amp)
+    else :
+        data = np.load(dossier+'\\data_o.npy') #
+    
+    print("adding pulses multi exp")
+    test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
+    print('done')
+    del data
+    gc.collect(generation=2)
+
+nom_doss = "cartes_de_pression\\"
+traj_carte = traj + nom_doss
+path(traj_carte)
+traj1= traj_carte+"raw\\"
+path(traj1)
+
+print("plot cartes de pression raw")
+test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend)
+test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend)
+
+test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend)
+
+test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend)
+
+traj2= traj_carte+"moy\\"
+path(traj2)
+print("plot cartes de pression moyennées")
+test_m_exp.plot_UH_windowed(traj2,nbit,fit,10,100,rep,legend)
+test_m_exp.plot_UH_norm_windowed(traj2,nbit,fit,10,100,rep,legend)
+test_m_exp.plot_H_windowed(traj2,nbit,fit,10,100,rep,legend)
+test_m_exp.plot_BB_windowed(traj2,nbit,fit,20,100,rep,legend)
+
+
+#%%
+from classes import *
+start,end = 10000,236000
+
+test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
+
+for j in range(nexp):
+    test_m_exp.creat_expe()
+
+for i in range(nexp):
+    print("\nloading data : "+doss[i])
+    dossier=tra+doss[i]
+    traj_comp = tra+doss[i]
+    path(traj_comp)
+    data = np.load(dossier+'\\data_o.npy') #
+    
+    test_exp=experiment(25000000,1500000,start=start,end=end)
+    print("adding pulses exp")
+    test_exp.add_pulses(data[:rep*(bitmax-1)], spacer =100e3)
+    test_exp.plot_indice_component(traj+doss[i]+"_Components\\",nbit,fit,rep)
+    test_exp.plot_indice_bis(legend[i],traj,6,nbit,legend,fit)
+    del test_exp
+    
+    print("adding pulses multi exp")
+    test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
+    print('done')
+    del data
+    gc.collect(generation=2)
+
+nom = "différents_indices"
+dossier = traj+nom+"\\"
+test_m_exp.plot_indice_together_grp(nom,dossier,nbit,rep,legend,fit = list(fit))
+
+sys.exit()
+#%%
 
 # press = [200,450,700,1000]
 # val = [p_to_b(fit,elt) for elt in press ]
@@ -79,98 +161,6 @@ nbit=[1,bitmax]
 #         test_exp.pulses[30*elt+i].plot_W(chemin)
 # plt.close("all")
 # sys.exit()
-
-
-
-for j in range(nexp):
-    test_m_exp.creat_expe()
-
-for i in range(nexp):
-    print("\nloading data : "+doss[i])
-    dossier=tra+doss[i]
-    #dossier="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\small_data\\"+doss[i]#plop
-    traj_comp = tra+doss[i]
-    path(traj_comp)
-    data = np.load(dossier+'\\data_o.npy') #
-    #amp = np.load(dossier+'\\amp.npy') #_order
-
-    
-    
-    test_exp=experiment(25000000,1500000,start=start,end=end)
-    print("adding pulses exp")
-    test_exp.add_pulses(data[:20*(bitmax-1)], spacer =100e3)
-    test_exp.plot_indice_component(traj+doss[i]+"\\",nbit,fit,20)
-    del test_exp
-    
-    print("adding pulses multi exp")
-    test_m_exp.add_pulses(data[:20*(bitmax-1)], i, spacer =100e3)
-    print('done')
-    del data
-    gc.collect(generation=2)
-sys.exit()
-#%%
-
-# traj="C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\EXPE_RESULTS\\comparaison_bubbles_FFT_goodKPa\\"
-# traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\comparaison_bubbles_FFT_goodKPa\\"
-nom_doss = "pression_carte\\"
-traj += nom_doss
-path(traj)
-
-traj1= traj+"raw\\"
-path(traj1)
-legend=["no Mbs","Dilution 240","Dilution 80","Dilution 27"]
-print("plot UH")
-test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend)
-test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend)
-print("plot BB")
-test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend)
-print("plot H")
-test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend)
-
-traj2= traj+"moy\\"
-path(traj2)
-test_m_exp.plot_UH_windowed(traj2,nbit,fit,10,100,30,legend)
-test_m_exp.plot_UH_norm_windowed(traj2,nbit,fit,10,100,30,legend)
-test_m_exp.plot_H_windowed(traj2,nbit,fit,10,100,30,legend)
-test_m_exp.plot_BB_windowed(traj2,nbit,fit,20,100,30,legend)
-sys.exit()
-#%%
-
-nom = "vitro"
-dossier = traj+nom+"\\"
-legend=["no Mbs","Dilution 240","Dilution 80","Dilution 27"]
-test_m_exp.plot_indice_together_grp(nom,dossier,nbit,20,legend,fit = list(fit))
-
-
-# =============================================================================
-# print("plotting pulses")
-# rep = 30
-# bit = 50
-# destination = "C:\\Users\\PM263553\\Desktop\\plot\\new_pulses"
-# path(destination)
-# destination += "\\"
-# for a in range(183):
-#     test_m_exp.exp[0].pulses[a].plot(destination+"bit _{}".format(a+2))
-# =============================================================================
-    
-sys.exit()
-path(traj)
-traj1= traj+"raw\\"
-path(traj1)
-legend=["no Mbs","Mbs=0.25mL","Mbs=0.50mL","Mbs=0.75mL","Mbs=1.00mL"]
-# =============================================================================
-# print("plot UH")
-# test_m_exp.plot_UH_windowed(traj1,nbit,20,99,1,legend)
-# print("plot BB")
-# test_m_exp.plot_BB_windowed(traj1,nbit,25,99,1,legend)
-# print("plot H")
-# test_m_exp.plot_H_windowed(traj1,nbit,15,99,1,legend)
-# =============================================================================
-
-sys.exit()
-
-
-#%%
 
 plt.figure(figsize=(19,9))
 for j in range(1,30):
