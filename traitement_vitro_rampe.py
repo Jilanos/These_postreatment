@@ -14,37 +14,40 @@ import gc
 gc.collect(generation=2)
 
 #VITRO
-traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_11\\plot_post_treatment\\"
-tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_11\\"
 tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\'
 traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\comparaison_bubbles_FFT_new\\'
+traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_RAMPE\\"
+tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\"
 path(traj)
      
 doss=["bubbles_0_75","bubbles_99_75","bubbles_50_75"]
-doss=["bubbles_0_75","bubbles_240_75","bubbles_80_75","bubbles_27_75"]  
+doss=["RAMP_0_80","RAMP_666_40","bubbles_80_75","bubbles_27_75"]  
 # =============================================================================
 # start,end = 1100,23437 + 1100     #zone rouge
 # start,end = 23437 + 1100 ,312800     #zone Vide  
 # start,end = 1100,31280     #zone verte    
 # =============================================================================
 
-start,end = 0,-1
+start,end = 0,334000
+bit_max_shot = 40
 
-start,end = 10000,236000
 
 test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-nexp=4
+nexp=2
 fit = np.array([4.66745471*2, 5.80567673])
 fit = np.array([7.92060316*2, 2.42161125])
-pression_max = 1000
+pression_max = 500
 pression_min = 1
 bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
 bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
 bitpress = int(np.round(((400-fit[1])/fit[0])))
-press_max = 75*fit[0]+fit[1]
+press_max = bit_max_shot*fit[0]+fit[1]
 nbit=[1,bitmax]
 
-legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
+
+(nbit[1])*fit[0]+fit[1],(nbit[0])*fit[0]+fit[1]
+
+legend=["Eau pure","Sonovue dilué 666 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
 nom = "test_val_individuelles"
 doss_indi = traj+nom+"\\"
 
@@ -53,28 +56,53 @@ for j in range(nexp):
     test_m_exp.creat_expe()
 
 for i in range(0,nexp):
+    
     print("\nloading data : "+doss[i])
     dossier=tra+doss[i]
     traj_comp = tra+doss[i]
     path(traj_comp)
-    data = np.load(dossier+'\\data_o.npy')
-
-    # amp = np.load(dossier+'\\amp.npy')
-    # data, amp = reorder(data,amp)
-    # np.save(dossier+'\\data_o.npy',data)
-    # np.save(dossier+'\\amp_o.npy',amp)
-
-    # test_exp=experiment(25000000,1500000,start=start,end=end)
+    data = np.load(dossier+'\\data.npy')
     
-    # print("adding pulses exp")
-    # test_exp.add_pulses(data, spacer =100e3)
-    # test_exp.plot_indice_bis(legend[i],doss_indi,x_press)
+    if i ==0 :
+        n_pulse = np.shape(data)[0]
+        x_press = valeurs(data[:,:end], press_max)
+        
+
+    test_exp=experiment(25000000,1500000,start=start,end=end)
     
+    print("adding pulses exp")
+    test_exp.add_pulses(data, spacer =100e3)
+    test_exp.plot_indice_RAMP(legend[i],doss_indi,x_press)
+    
+
     print("adding pulses multi exp")
-    test_m_exp.add_pulses(data[:20*(bitmax-1)], i, spacer =100e3)
+    test_m_exp.add_pulses(data, i, spacer =100e3)
     print('done')
     del data
     gc.collect(generation=2)
+
+# nom = "test_ramp"
+# dossier = traj+nom+"\\"
+# legend=["no Mbs","Mbs=0.50mL","Mbs=1.00mL"]
+# test_m_exp.plot_indice_RAMP(nom,dossier,nbit,legend,fit = False)
+
+nom_doss = "cartes_de_pression\\"
+traj_carte = traj + nom_doss
+path(traj_carte)
+traj1= traj_carte
+path(traj1)
+print("plot cartes de pression raw")
+fit = [1,0]
+nbit= [1,n_pulse]
+test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
+test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
+test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
+test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
+
+
+
+sys.exit()
+
     
 # x_n_fenetre = [i for i in range(len(x_press))]  
 # nom = "ramp_fenêtre"
@@ -84,41 +112,11 @@ for i in range(0,nexp):
 # dossier = traj+nom+"\\"
 # test_m_exp.plot_indice_RAMP(nom,dossier,x_press,legend)    
 
-sys.exit()     
-    
-#%%
-
-# traj="C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\EXPE_RESULTS\\comparaison_bubbles_FFT_goodKPa\\"
-# traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\comparaison_bubbles_FFT_goodKPa\\"
-nom_doss = "pression_carte\\"
-traj += nom_doss
-path(traj)
-
-traj1= traj+"raw\\"
-path(traj1)
-legend=["no Mbs","Dilution 240","Dilution 80","Dilution 27"]
-print("plot UH")
-test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend)
-test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend)
-print("plot BB")
-test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend)
-print("plot H")
-test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend)
-
-traj2= traj+"moy\\"
-path(traj2)
-test_m_exp.plot_UH_windowed(traj2,nbit,fit,10,100,20,legend)
-test_m_exp.plot_UH_norm_windowed(traj2,nbit,fit,10,100,20,legend)
-test_m_exp.plot_H_windowed(traj2,nbit,fit,10,100,20,legend)
-test_m_exp.plot_BB_windowed(traj2,nbit,fit,20,100,20,legend)
-sys.exit()
-#%%
-
 nom = "test_ramp"
 dossier = traj+nom+"\\"
-legend=["no Mbs","Mbs=0.50mL","Mbs=1.00mL"]
+legend=["Eau pure","Sonovue dilué 666 fois","Mbs=1.00mL"]
 test_m_exp.plot_indice_RAMP(nom,dossier,nbit,legend,fit = False)
-
+sys.exit()
 #%%
 # =============================================================================
 # print("plotting pulses")

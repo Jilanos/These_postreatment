@@ -1015,7 +1015,11 @@ class experiment_mult():
         plt.close("all")  
            
         
-    def plot_UH_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)]):
+    def plot_UH_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)], ramp = False):
+        y_axis = 'Pressure (KPa)'
+        if ramp:
+            y_axis = 'Different pulses (ramping pressure)'
+            
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         ##recuperation des indices
@@ -1025,7 +1029,7 @@ class experiment_mult():
             for j in range(self.exp[0].n_pulse//n):#self.exp[i].pulses[j].indice_harm_w[1]+
                 val = np.mean(np.mean([self.exp[i].pulses[j*n+a].indice_Uharm_w[1:4] for a in range(n)] ,axis=0),axis=0)
                 plot[i,j,:]=20*np.log10(val) #20*np.log10
-
+                
         self.ratio=plot
         fig=plt.figure(figsize=(20,11))
         #fit = np.array([4.66745471*2, 5.80567673])
@@ -1043,7 +1047,7 @@ class experiment_mult():
             ax.title.set_fontweight('bold')
             ax.set_xlabel('Intra-Pulse Time'.upper()+' (ms)')
             if i==0:
-                ax.set_ylabel('Pressure (KPa)')
+                ax.set_ylabel(y_axis)
         
         fig.colorbar(im,ax=axes.ravel().tolist())
         #plt.savefig(chemin+"\\bulles_H{}_fonda.png".format(k),bbox_inches='tight')
@@ -1051,7 +1055,10 @@ class experiment_mult():
         plt.clf()
         plt.close("all")
 
-    def plot_UH_norm_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)]):
+    def plot_UH_norm_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)],ramp = False):
+        y_axis = 'Pressure (KPa)'
+        if ramp:
+            y_axis = 'Different pulses (ramping pressure)'
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         ##recuperation des indices
@@ -1078,7 +1085,7 @@ class experiment_mult():
             ax.title.set_fontweight('bold')
             ax.set_xlabel('Intra-Pulse Time'.upper()+' (ms)')
             if i==0:
-                ax.set_ylabel('Pressure (KPa)')
+                ax.set_ylabel(y_axis)
         
         fig.colorbar(im,ax=axes.ravel().tolist())
         #plt.savefig(chemin+"\\bulles_H{}_fonda.png".format(k),bbox_inches='tight')
@@ -1088,7 +1095,10 @@ class experiment_mult():
         
         
         
-    def plot_H_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)],):
+    def plot_H_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)],ramp = False):
+        y_axis = 'Pressure (KPa)'
+        if ramp:
+            y_axis = 'Different pulses (ramping pressure)'
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         ##recuperation des indices
@@ -1120,7 +1130,7 @@ class experiment_mult():
                 ax.title.set_fontweight('bold')
                 ax.set_xlabel('Intra-Pulse Time'.upper()+' (ms)')
                 if i==0:
-                    ax.set_ylabel('Pressure (KPa)')
+                    ax.set_ylabel(y_axis)
             
             fig.colorbar(im,ax=axes.ravel().tolist())
             #plt.savefig(chemin+"\\bulles_H{}_fonda.png".format(k),bbox_inches='tight')
@@ -1128,7 +1138,10 @@ class experiment_mult():
             plt.clf()
         plt.close("all")
         
-    def plot_BB_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)],):
+    def plot_BB_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)],ramp = False):
+        y_axis = 'Pressure (KPa)'
+        if ramp:
+            y_axis = 'Different pulses (ramping pressure)'
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         ##recuperation des indices
@@ -1158,7 +1171,7 @@ class experiment_mult():
             ax.title.set_fontweight('bold')
             ax.set_xlabel('Intra-Pulse Time'.upper()+' (ms)')
             if i==0:
-                ax.set_ylabel('Pressure (KPa)')
+                ax.set_ylabel(y_axis)
         
         fig.colorbar(im,ax=axes.ravel().tolist())
         #plt.savefig(chemin+"\\bulles_H{}_fonda.png".format(k),bbox_inches='tight')

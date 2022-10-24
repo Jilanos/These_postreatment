@@ -50,7 +50,6 @@ for j in range(nexp):
 for i in range(nexp):
     print("\nloading data : "+doss[i])
     dossier=tra+doss[i]
-    #dossier="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter5\\small_data\\"+doss[i]#plop
     traj_comp = tra+doss[i]
     path(traj_comp)
     if not(order):
