@@ -48,8 +48,6 @@ nbit=[1,bitmax]
 (nbit[1])*fit[0]+fit[1],(nbit[0])*fit[0]+fit[1]
 
 legend=["Eau pure","Sonovue dilué 666 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
-nom = "test_val_individuelles"
-doss_indi = traj+nom+"\\"
 
 
 for j in range(nexp):
@@ -72,7 +70,7 @@ for i in range(0,nexp):
     
     print("adding pulses exp")
     test_exp.add_pulses(data, spacer =100e3)
-    test_exp.plot_indice_RAMP(legend[i],doss_indi,x_press)
+    test_exp.plot_indice_RAMP(legend[i],traj,x_press)
     
 
     print("adding pulses multi exp")
@@ -81,10 +79,15 @@ for i in range(0,nexp):
     del data
     gc.collect(generation=2)
 
-# nom = "test_ramp"
+nom = "test_ramp"
+dossier = traj+nom+"\\"
+legend=["no Mbs","Mbs=0.50mL","Mbs=1.00mL"]
+test_m_exp.plot_indice_RAMP(nom,dossier,x_press,legend)    
+# x_n_fenetre = [i for i in range(len(x_press))]  
+# nom = "ramp_fenêtre"
 # dossier = traj+nom+"\\"
-# legend=["no Mbs","Mbs=0.50mL","Mbs=1.00mL"]
-# test_m_exp.plot_indice_RAMP(nom,dossier,nbit,legend,fit = False)
+# test_m_exp.plot_indice_RAMP(nom,dossier,x_n_fenetre,legend)   
+
 
 nom_doss = "cartes_de_pression\\"
 traj_carte = traj + nom_doss
@@ -94,10 +97,10 @@ path(traj1)
 print("plot cartes de pression raw")
 fit = [1,0]
 nbit= [1,n_pulse]
-test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
-test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
-test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
-test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend,ramp=True)
+test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend,True)
+test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend,True)
+test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend,True)
+test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend,True)
 
 
 
