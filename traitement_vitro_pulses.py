@@ -14,8 +14,8 @@ import gc
 gc.collect(generation=2)
 
 #VITRO
-tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\'
-traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_6\\comparaison_bubbles_FFT_new\\'
+tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
+traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_PULSE\\'
 tra = 'C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\'
 traj='C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_PULSE\\'
 

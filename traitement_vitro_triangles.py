@@ -14,28 +14,24 @@ import gc
 gc.collect(generation=2)
 
 #VITRO
-tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_15\\'
-traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_15\\comparaison_bubbles_FFT_new\\'
 traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_TRIANGLE\\"
 tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\"
+tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
+traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_TRI\\'
 path(traj)
-     
-doss=["TRI_0_75","TRI_240_75","TRI_80_75","TRI_27_75"]   
-doss=["TRI_0_40","TRI_666_40","TRI_80_75","TRI_27_75"]   
+       
+doss=["TRI_0_40","TRI_666_40","TRI_80_75","TRI_27_75"]  
+doss=["TRI_0_75","TRI_240_75","TRI_80_75","TRI_27_75"]  
 legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]  
-# =============================================================================
-# start,end = 1100,23437 + 1100     #zone rouge
-# start,end = 23437 + 1100 ,312800     #zone Vide  
-# start,end = 1100,31280     #zone verte    
-# =============================================================================
+
 
 start,end = 0,-1
 
 test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-nexp=2
+nexp=4
 fit = np.array([4.66745471*2, 5.80567673])
 fit = np.array([7.92060316*2, 2.42161125])
-pression_max = 900
+pression_max = 1000
 pression_min = 1
 bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
 bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
@@ -43,8 +39,8 @@ bitpress = int(np.round(((400-fit[1])/fit[0])))
 press_max = 75*fit[0]+fit[1]
 nbit=[1,bitmax]
 
-rep = 6
-order = True
+rep = 20
+order = False
 p_deb = 11000
 
 

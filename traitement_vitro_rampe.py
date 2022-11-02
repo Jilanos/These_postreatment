@@ -14,8 +14,8 @@ import gc
 gc.collect(generation=2)
 
 #VITRO
-tra = 'C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\'
-traj='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\comparaison_bubbles_FFT_new\\'
+tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
+traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_RAMPE\\'
 traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_RAMPE\\"
 tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\"
 path(traj)
@@ -24,11 +24,7 @@ doss=["bubbles_0_75","bubbles_80_75","bubbles_50_75"]
 doss=["RAMP_0_75","RAMP_240_75","bubbles_80_75","bubbles_27_75"]
 doss=["RAMP_0_80","RAMP_666_40","bubbles_80_75","bubbles_27_75"]
 legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
-# =============================================================================
-# start,end = 1100,23437 + 1100     #zone rouge
-# start,end = 23437 + 1100 ,312800     #zone Vide  
-# start,end = 1100,31280     #zone verte    
-# =============================================================================
+
 
 start,end = 0,334000
 bit_max_shot = 40
@@ -45,10 +41,6 @@ bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
 bitpress = int(np.round(((400-fit[1])/fit[0])))
 press_max = bit_max_shot*fit[0]+fit[1]
 nbit=[1,bitmax]
-
-
-(nbit[1])*fit[0]+fit[1],(nbit[0])*fit[0]+fit[1]
-
 
 
 for j in range(nexp):
