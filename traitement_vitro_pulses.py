@@ -23,8 +23,9 @@ traj='C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Anal
 
 path(traj)
 
-doss=["PULSE_0_40","PULSE_666_40","bubbles_80_75","bubbles_27_75"]   
-legend=["No Mbs","Dilution 666","Dilution 80","Dilution 27"]   
+doss=["PULSE_0_75","PULSE_240_75","PULSE_80_75","PULSE_27_75"]  
+doss=["PULSE_0_40","PULSE_666_40","TRI_80_75","TRI_27_75"]     
+legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
 
 start,end = 10000,236000
 start,end = 0,-1
@@ -43,11 +44,10 @@ nbit=[1,bitmax]
 rep = 6
 order = True
 
-
 for j in range(nexp):
     test_m_exp.creat_expe()
 
-for i in range(nexp):
+for i in range(0,nexp):
     print("\nloading data : "+doss[i])
     dossier=tra+doss[i]
     traj_comp = tra+doss[i]
@@ -69,6 +69,9 @@ for i in range(nexp):
     del data
     gc.collect(generation=2)
 
+
+
+#%%
 nom_doss = "cartes_de_pression\\"
 traj_carte = traj + nom_doss
 path(traj_carte)
@@ -76,21 +79,12 @@ traj1= traj_carte+"raw\\"
 path(traj1)
 
 print("plot cartes de pression raw")
-test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend)
-test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend)
-
-test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend)
-
-test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend)
+test_m_exp.plot_windowed(traj1,nbit,fit,10,100,1,legend)
 
 traj2= traj_carte+"moy\\"
 path(traj2)
 print("plot cartes de pression moyennées")
-test_m_exp.plot_UH_windowed(traj2,nbit,fit,10,100,rep,legend)
-test_m_exp.plot_UH_norm_windowed(traj2,nbit,fit,10,100,rep,legend)
-test_m_exp.plot_H_windowed(traj2,nbit,fit,10,100,rep,legend)
-test_m_exp.plot_BB_windowed(traj2,nbit,fit,20,100,rep,legend)
-
+test_m_exp.plot_windowed(traj2,nbit,fit,10,100,rep,legend)
 
 #%%
 from classes import *
@@ -101,18 +95,18 @@ test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
 for j in range(nexp):
     test_m_exp.creat_expe()
 
-for i in range(nexp):
+for i in range(0,nexp):
     print("\nloading data : "+doss[i])
     dossier=tra+doss[i]
     traj_comp = tra+doss[i]
     path(traj_comp)
     data = np.load(dossier+'\\data_o.npy') #
-    
+
     test_exp=experiment(25000000,1500000,start=start,end=end)
     print("adding pulses exp")
     test_exp.add_pulses(data[:rep*(bitmax-1)], spacer =100e3)
     test_exp.plot_indice_component(traj+doss[i]+"_Components\\",nbit,fit,rep)
-    test_exp.plot_indice_bis(legend[i],traj,6,nbit,legend,fit)
+    test_exp.plot_indice_bis(legend[i],traj,rep,nbit,legend,fit)
     del test_exp
     
     print("adding pulses multi exp")

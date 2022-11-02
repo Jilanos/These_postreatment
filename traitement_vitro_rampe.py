@@ -20,8 +20,10 @@ traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Anal
 tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\"
 path(traj)
      
-doss=["bubbles_0_75","bubbles_99_75","bubbles_50_75"]
-doss=["RAMP_0_80","RAMP_666_40","bubbles_80_75","bubbles_27_75"]  
+doss=["bubbles_0_75","bubbles_80_75","bubbles_50_75"]  
+doss=["RAMP_0_75","RAMP_240_75","bubbles_80_75","bubbles_27_75"]
+doss=["RAMP_0_80","RAMP_666_40","bubbles_80_75","bubbles_27_75"]
+legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
 # =============================================================================
 # start,end = 1100,23437 + 1100     #zone rouge
 # start,end = 23437 + 1100 ,312800     #zone Vide  
@@ -47,7 +49,6 @@ nbit=[1,bitmax]
 
 (nbit[1])*fit[0]+fit[1],(nbit[0])*fit[0]+fit[1]
 
-legend=["Eau pure","Sonovue dilué 666 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
 
 
 for j in range(nexp):
@@ -60,18 +61,16 @@ for i in range(0,nexp):
     traj_comp = tra+doss[i]
     path(traj_comp)
     data = np.load(dossier+'\\data.npy')
-    
+
     if i ==0 :
         n_pulse = np.shape(data)[0]
         x_press = valeurs(data[:,:end], press_max)
         
-
     test_exp=experiment(25000000,1500000,start=start,end=end)
     
     print("adding pulses exp")
     test_exp.add_pulses(data, spacer =100e3)
     test_exp.plot_indice_RAMP(legend[i],traj,x_press)
-    
 
     print("adding pulses multi exp")
     test_m_exp.add_pulses(data, i, spacer =100e3)
@@ -81,14 +80,13 @@ for i in range(0,nexp):
 
 nom = "test_ramp"
 dossier = traj+nom+"\\"
-legend=["no Mbs","Mbs=0.50mL","Mbs=1.00mL"]
 test_m_exp.plot_indice_RAMP(nom,dossier,x_press,legend)    
 # x_n_fenetre = [i for i in range(len(x_press))]  
 # nom = "ramp_fenêtre"
 # dossier = traj+nom+"\\"
 # test_m_exp.plot_indice_RAMP(nom,dossier,x_n_fenetre,legend)   
 
-
+#%%
 nom_doss = "cartes_de_pression\\"
 traj_carte = traj + nom_doss
 path(traj_carte)
@@ -97,15 +95,9 @@ path(traj1)
 print("plot cartes de pression raw")
 fit = [1,0]
 nbit= [1,n_pulse]
-test_m_exp.plot_UH_windowed(traj1,nbit,fit,10,100,1,legend,True)
-test_m_exp.plot_UH_norm_windowed(traj1,nbit,fit,10,100,1,legend,True)
-test_m_exp.plot_BB_windowed(traj1,nbit,fit,10,100,1,legend,True)
-test_m_exp.plot_H_windowed(traj1,nbit,fit,10,100,1,legend,True)
-
-
+test_m_exp.plot_windowed(traj1,nbit,fit,10,100,1,legend,True)
 
 sys.exit()
-
     
 # x_n_fenetre = [i for i in range(len(x_press))]  
 # nom = "ramp_fenêtre"
@@ -115,11 +107,7 @@ sys.exit()
 # dossier = traj+nom+"\\"
 # test_m_exp.plot_indice_RAMP(nom,dossier,x_press,legend)    
 
-nom = "test_ramp"
-dossier = traj+nom+"\\"
-legend=["Eau pure","Sonovue dilué 666 fois","Mbs=1.00mL"]
-test_m_exp.plot_indice_RAMP(nom,dossier,nbit,legend,fit = False)
-sys.exit()
+
 #%%
 # =============================================================================
 # print("plotting pulses")
