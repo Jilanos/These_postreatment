@@ -32,8 +32,8 @@ fe = 25e6
 bubbles=True
 pause=150000
 
-doss='bubbles_27_{}'.format(bit_max)
-folder='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_14\\'+doss
+doss='RAMP_27_{}'.format(bit_max)
+folder='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_20\\'+doss
 if not os.path.exists(folder):
     os.makedirs(folder)
 folder_plot = folder + "\\plot"
@@ -197,7 +197,7 @@ text_file.close()
 #%%
 
 pl.figure(figsize=(20,10))
-n=16
+n=1
 Data=Data_stock[n]
 x_abs = [i * 1/ fe*1000 for i in range(len(Data))]
 pl.plot(x_abs[:],Data[:])

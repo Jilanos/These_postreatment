@@ -25,7 +25,7 @@ Signal_size=32 ## 32 bien pour un pulse de 10 ms
 Elts_par_pulse=Signal_size*8188
 
 PL=10e-3
-bit_max=65
+bit_max=150
 average=30
 freq=1.5e6
 fe = 25e6

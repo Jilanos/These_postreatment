@@ -32,8 +32,8 @@ fe = 25e6
 bubbles=True
 pause=150000
 
-doss='bubbles_27_{}'.format(bit_max)
-folder='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_13\\'+doss
+doss='PULSE_27_{}'.format(bit_max)
+folder='C:\\Users\\MIDAS\\Desktop\\code_UH_long\\GENE_MOD\\iter_20\\'+doss
 if not os.path.exists(folder):
     os.makedirs(folder)
 folder_plot = folder + "\\plot"
