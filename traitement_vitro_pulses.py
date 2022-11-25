@@ -62,7 +62,7 @@ for i in range(0,nexp):
         np.save(dossier+'\\amp_o.npy',amp)
     else :
         data = np.load(dossier+'\\data_o.npy') #
-    
+    sys.exit()
     print("adding pulses multi exp")
     test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
     print('done')
@@ -227,17 +227,21 @@ plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
 
 #%%
+traj='C:\\Users\\PM263553\\Desktop\\These\\presentation\\CAMI2\\'
+Y = data[-10]
+X = [i / 25000. for i in range(len(Y))]
+
+plott(X,Y,traj+"pulse",color='blue',titre = "Ultrasound pulse shot at 1.5MPa",Xlabel="Time (ms)",Ylabel="Magnitude (mV)",color_leg = 'black')
 
 
 
-
-Y = data[1500,:40000]
-X = np.arange(len(Y))/25000.
-plt.plot(X,Y)
-plt.xlabel("Temps (ms)", fontsize = 20)
-plt.ylabel("Amplitude (mV)", fontsize = 20)
-plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
-plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
-plt.xticks(fontsize=20)
-plt.yticks(fontsize=20)
+# Y = data[1500,:40000]
+# X = np.arange(len(Y))/25000.
+# plt.plot(X,Y)
+# plt.xlabel("Temps (ms)", fontsize = 20)
+# plt.ylabel("Amplitude (mV)", fontsize = 20)
+# plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+# plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+# plt.xticks(fontsize=20)
+# plt.yticks(fontsize=20)
 
