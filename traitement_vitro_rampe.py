@@ -16,22 +16,25 @@ gc.collect(generation=2)
 #VITRO
 tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
 traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_RAMPE\\'
-traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_RAMPE\\"
-tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\"
+traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_14\\Analyse_RAMPE_viv\\"
+
+tra = "D:\\data_vitro\\iter_20\\"
+tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_14\\"
+traj = tra + "Analyse_RAMPE_viv\\"
 path(traj)
      
-doss=["bubbles_0_75","bubbles_80_75","bubbles_50_75"]  
-doss=["RAMP_0_75","RAMP_240_75","bubbles_80_75","bubbles_27_75"]
 doss=["RAMP_0_80","RAMP_666_40","bubbles_80_75","bubbles_27_75"]
+doss=["RAMP_0_75","RAMP_240_75","RAMP_80_75","RAMP_27_75"] 
+doss=["bubbles_0_75","bubbles_240_75","bubbles_80_75","bubbles_27_75"] 
 legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
 
 
 start,end = 0,334000
-bit_max_shot = 40
+bit_max_shot = 75
 
 
 test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-nexp=2
+nexp=4
 fit = np.array([4.66745471*2, 5.80567673])
 fit = np.array([7.92060316*2, 2.42161125])
 pression_max = 500
@@ -57,19 +60,24 @@ for i in range(0,nexp):
     if i ==0 :
         n_pulse = np.shape(data)[0]
         x_press = valeurs(data[:,:end], press_max)
+        continue
         
     test_exp=experiment(25000000,1500000,start=start,end=end)
     
     print("adding pulses exp")
     test_exp.add_pulses(data, spacer =100e3)
-    test_exp.plot_indice_RAMP(legend[i],traj,x_press)
-
-    print("adding pulses multi exp")
-    test_m_exp.add_pulses(data, i, spacer =100e3)
-    print('done')
-    del data
-    gc.collect(generation=2)
-
+    print("plotting")
+    #test_exp.plot_indice_RAMP(legend[i],traj,x_press, vivo= True, all_plot=True)
+    for std in range(4,8):
+        print("STD = ", std)
+        test_exp.plot_indice_RAMP_std(legend[i],traj+legend[i]+"__std_{}\\".format(std),still_wind = 15, std_tresh = std)
+   
+    # print("adding pulses multi exp")
+    # test_m_exp.add_pulses(data, i, spacer =100e3)
+    # print('done')
+    # del data
+    # gc.collect(generation=2)
+sys.exit()
 nom = "test_ramp"
 dossier = traj+nom+"\\"
 test_m_exp.plot_indice_RAMP(nom,dossier,x_press,legend)    
