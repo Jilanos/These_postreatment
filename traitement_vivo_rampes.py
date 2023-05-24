@@ -25,14 +25,14 @@ tra0 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\
 tra1 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\VIVO_Mouse564_221122_65\\"
 tra2 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\VIVO_Mouse587_221122_45\\"
 tra3 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\VIVO_rat419_291122_52\\"
-tra4 = "D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_374\\"
-tra44 = "D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_375\\"
-tra444 = "D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_488\\"
+tra4 = "D:\\data_vivo\\20230322__mouse_574\\"
+tra44 = "D:\\data_vivo\\20230322__mouse_575\\"
+tra444 = "D:\\data_vivo\\20230322__mouse_588\\"
 tra5 = "D:\\data_vivo\\VIVO_rat_445_030123_75\\"
 tra6 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s3\\"
 tra7 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s4\\"
 tra8 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s5\\"
-trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\Analyse_mouse_ajd\\"
+trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\Analyse_mouse_22_03\\"
 
 
 tra0 = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
@@ -42,7 +42,7 @@ path(trajet)
 legend = ["mouse_564_65"]
 legend = ["rat_409_86", "mouse_564_65", "mouse_587_45", "rat_419_52", "rat_463_36", "rat_445_75"]
 legend = ["VITRO Paul"]
-legend = ["mouse 374","mouse 375","mouse 488"]
+legend = ["mouse 574","mouse 575","mouse 488"]
 
 #VIVO_Mouse587_221122_45
 for i, tra in enumerate([tra4,tra44,tra444]):#, tra1, tra2, tra3, tra4, tra5]): #[tra0, tra1, tra2, tra3]
@@ -66,7 +66,8 @@ for i, tra in enumerate([tra4,tra44,tra444]):#, tra1, tra2, tra3, tra4, tra5]): 
     nbit=[1,bitmax]
     
     print("\nLoading pulses......")
-    data = np.load(tra+'\\data_treatment.npy') #
+    data = np.load(tra+'\\Bubbles.npy')
+    data = np.transpose(data)#
     
     print("Loading done!")
     test_exp=experiment(25000000,1500000,start=start,end=end)
@@ -80,18 +81,18 @@ for i, tra in enumerate([tra4,tra44,tra444]):#, tra1, tra2, tra3, tra4, tra5]): 
     #test_exp.plot_indice_RAMP("treatment",traj,x_press, vivo= True, all_plot= True)
     for std in range(5,10,2):
             print("STD = ", std)
-            test_exp.plot_indice_RAMP_std(legend[i],traj+"MOY_std_{}\\".format(std),still_wind = 25, std_tresh = std, true_harm = False, plot_true = False)
+            test_exp.plot_indice_RAMP_std(legend[i],traj+"MOY_std_{}\\".format(std),still_wind = 40, std_tresh = std, true_harm = False, plot_true = False)
        
-    # print("plot cartes de pression raw")
-    # n_pulse = np.shape(data)[0]
-    # fit = [1,0]
-    # nbit= [1,n_pulse]
-    # test_exp.plot_windowed(traj,nbit,fit,20,99,1,legend, ramp = True)
-    # test_exp.plot_windowed(traj,nbit,fit,40,100,1,legend, ramp = True)
+    print("plot cartes de pression raw")
+    n_pulse = np.shape(data)[0]
+    fit = [1,0]
+    nbit= [1,n_pulse]
+    test_exp.plot_windowed(traj,nbit,fit,20,99,1,legend, ramp = True)
+    test_exp.plot_windowed(traj,nbit,fit,40,100,1,legend, ramp = True)
     
-    # for j in range(0,n_pulse,5):
-    #     print(j)
-    #     test_exp.pulses[j].plot(traji+"spec_{}".format(j))
+    for j in range(0,n_pulse,5):
+        print(j)
+        test_exp.pulses[j].plot(traji+"spec_{}".format(j))
         
     
 sys.exit()

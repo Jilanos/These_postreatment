@@ -28,72 +28,164 @@ def glissante(array, n):
         out[j] = np.mean([array[j-k] for k in range(n)])
     return out
 
-tra = 'E:\\test eau vendredi\\20230207_PCDsig_Paul_test_reduce_1bloc_0\\' #20230127_PCDsig_Paul_bulle_2
-tra = 'D:\\data_vitro\\CONTROLE_RAMP\\20230207_PCDsig_Paul_Control_Water\\'
-#tra = 'D:\\data_vivo\\20230124_PCDsig_M1\\'
+
+
+tra1 = 'D:\\data_vivo\\20230221_PCDsig_mouser_574\\'
+tra2 = 'D:\\data_vivo\\20230221_PCDsig_mouser_575\\'
+tra3 = 'D:\\data_vivo\\20230221_PCDsig_mouser_588\\'
+
+
+tra1 = 'D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_374\\'
+tra2 = 'D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_375\\'
+tra3 = 'D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_588\\'
 trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\Analyse_FPGA\\"
-path(trajet)
+trajet_base = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\Tirs multicanaux\\"
+path(trajet_base)
+tra1 = 'F:\\20230228_PCDsig_WATER_test_0\\'
 
-
-legend = ["test"]
-
+legend = ["xp 2 mouse 74","xp 2 mouse 575","xp 2 mouse 588"]
+legend = ["water_0","mouse 375","mouse 588"]
+plt.close("all")
+plt.figure(figsize=(15,8))
 #VIVO_Mouse587_221122_45
+for ind, tra in enumerate([tra1, tra2, tra3]) :
+    trajet = trajet_base+legend[ind] + "\\"
+    path(trajet)
+    i=0
+    #data_Con = np.load(tra+'\\ControlArr.npy') #ControlArr
+    data_arr = np.load(tra+'\\BubblesArr.npy') #ControlArr #BubblesArr
+    rat = 150/16777216.
+    amplitude = 170
+    fit = np.array([7.92060316E-3, 2.42161125E-3])
+    Pr_max =(amplitude*fit[0]+fit[1] )*1000
+    
+    
+    Clock=np.transpose(data_arr[:,0,:])
+    i_max=np.argmax(np.max(Clock,axis=1))
+    t_sequence=Clock[i_max,-65]/1e6
+    Output2_mat=np.transpose(data_arr[:-5,2,:i_max])
+    C1F0_mat=np.transpose(data_arr[:-5,18,:i_max])/16777216.  
+    C2F0_mat=np.transpose(data_arr[:-5,19,:i_max])/16777216.  
+    C3F0_mat=np.transpose(data_arr[:-5,20,:i_max])/16777216.  
+    C4F0_mat=np.transpose(data_arr[:-5,21,:i_max])/16777216.  
+    
+    UH32_mat=np.transpose(data_arr[:,4,:])/16777216.
+    UH52_mat=np.transpose(data_arr[:,5,:])/16777216.
+    
+    BB = np.transpose(data_arr[:,7,:])/16777216.
+    
+    lim_UH32=np.transpose(data_arr[:-5,10,:i_max])/16777216. 
+    std_UH32=np.transpose(data_arr[:-5,9,:i_max])/16777216. 
+    CUT_32=-np.transpose(data_arr[:-5,15,:i_max])
+    CUT_52=-np.transpose(data_arr[:-5,14,:i_max])
+    CUT_BB=-np.transpose(data_arr[:-5,8,:i_max])
+    mean_UH32=np.transpose(data_arr[:-5,12,:i_max])/16777216. 
+    lim_UH52=np.transpose(data_arr[:-5,11,:i_max])/16777216. 
+    mean4_UH32=np.transpose(data_arr[:-5,4,:i_max])/16777216. 
+    mean4_UH52=np.transpose(data_arr[:-5,5,:i_max])/16777216. 
+    lim_BB=np.transpose(data_arr[:-5,13,:i_max])/16777216. 
+    mean4_BB=np.transpose(data_arr[:-5,7,:i_max])/16777216. 
+    
+    
+    UHorBB=-np.transpose(data_arr[:-5,31,:i_max])
+    
+    b_fen=[25,260]    
+    # Clock_control=np.transpose(data_Con[:,0,:])
+    # i_max_Con=np.argmax(np.max(Clock_control,axis=1))
+    # Output2_mat_con=np.transpose(data_Con[:,2,:i_max_Con])
+    # C1F0_mat_con=np.transpose(data_Con[:,18,:i_max_Con])
+    
+    Output2_IGT_mat=Mat_Pr_Gen(Output2_mat, amplitude*fit[0]+fit[1], -16000., 14000.)
+    
+    Output_IGT_mat_R=Output2_IGT_mat[:,b_fen[0]:b_fen[1]]
+    arrayPr=np.max(Output_IGT_mat_R,axis=1)
+    # Output2_IGT_mat_con=Mat_Pr_Gen(Output2_mat_con, amplitude*fit[0]+fit[1], -16000., 14000.)
+    
+    #%%
 
-i=0
-traj = trajet + legend[i]+ "\\"
-path(traj)
-# traj = tra + "Analyse_trueharm\\"
-# path(traj)
-traji = traj + "spectres\\"
-path(traji)
-#data_Con = np.load(tra+'\\ControlArr.npy') #ControlArr
-data_arr = np.load(tra+'\\BubblesArr.npy') #ControlArr #BubblesArr
-rat = 150/16777216.
-amplitude = 100
-fit = np.array([7.92060316E-3, 2.42161125E-3])
-Pr_max = amplitude*fit[0]+fit[1]
+    trajet_retour = trajet
 
-
-Clock=np.transpose(data_arr[:,0,:])
-i_max=np.argmax(np.max(Clock,axis=1))
-t_sequence=Clock[i_max,-65]/1e6
-Output2_mat=np.transpose(data_arr[:-5,2,:i_max])
-C1F0_mat=np.transpose(data_arr[:-5,18,:i_max])/16777216.  
-C2F0_mat=np.transpose(data_arr[:-5,19,:i_max])/16777216.  
-C3F0_mat=np.transpose(data_arr[:-5,20,:i_max])/16777216.  
-C4F0_mat=np.transpose(data_arr[:-5,21,:i_max])/16777216.  
-
-UH32_mat=np.transpose(data_arr[:,4,:])/16777216.
-UH52_mat=np.transpose(data_arr[:,5,:])/16777216.
-
-BB = np.transpose(data_arr[:,7,:])/16777216.
-
-lim_UH32=np.transpose(data_arr[:-5,10,:i_max])/16777216. 
-std_UH32=np.transpose(data_arr[:-5,9,:i_max])/16777216. 
-CUT_32=-np.transpose(data_arr[:-5,15,:i_max])
-CUT_52=-np.transpose(data_arr[:-5,14,:i_max])
-CUT_BB=-np.transpose(data_arr[:-5,8,:i_max])
-mean_UH32=np.transpose(data_arr[:-5,12,:i_max])/16777216. 
-lim_UH52=np.transpose(data_arr[:-5,11,:i_max])/16777216. 
-mean4_UH32=np.transpose(data_arr[:-5,4,:i_max])/16777216. 
-mean4_UH52=np.transpose(data_arr[:-5,5,:i_max])/16777216. 
-lim_BB=np.transpose(data_arr[:-5,13,:i_max])/16777216. 
-mean4_BB=np.transpose(data_arr[:-5,7,:i_max])/16777216. 
-
-
-UHorBB=-np.transpose(data_arr[:-5,31,:i_max])
-
-b_fen=[25,260]    
-# Clock_control=np.transpose(data_Con[:,0,:])
-# i_max_Con=np.argmax(np.max(Clock_control,axis=1))
-# Output2_mat_con=np.transpose(data_Con[:,2,:i_max_Con])
-# C1F0_mat_con=np.transpose(data_Con[:,18,:i_max_Con])
-
-Output2_IGT_mat=Mat_Pr_Gen(Output2_mat, amplitude*fit[0]+fit[1], -16000., 14000.)
-
-Output_IGT_mat_R=Output2_IGT_mat[:,b_fen[0]:b_fen[1]]
-arrayPr=np.max(Output_IGT_mat_R,axis=1)
-# Output2_IGT_mat_con=Mat_Pr_Gen(Output2_mat_con, amplitude*fit[0]+fit[1], -16000., 14000.)
+    
+    path(trajet_retour)
+    delai = []
+    deb, fin = 40, 280
+    convergence = []
+    convergence_nosat = []
+    cut_pulse = []
+    n_cut = 0    
+    pulses_cuted = []
+    time_cuted = []
+    n_satur = 0
+    for j in range(np.shape(CUT_BB)[0]):
+        convergence.append(np.max(Output2_IGT_mat[j][deb:fin]))
+        val_end = Output2_IGT_mat[j][260]
+        if convergence[-1] >= 0.999*np.max(Output2_IGT_mat[:][deb:fin]):
+            n_satur += 1
+        else :
+            convergence_nosat.append(np.max(Output2_IGT_mat[j][deb:fin]))
+        if val_end <= 0.2*convergence[-1]:
+            cut_pulse.append(True)
+            n_cut+=1
+            pulses_cuted.append(j)
+            seuil = (np.max(Output2_IGT_mat[j][deb:fin])-np.min(Output2_IGT_mat[j][deb:fin]))*0.1 + np.min(Output2_IGT_mat[j][deb:fin])
+            for k in range(45, 280):
+                if Output2_IGT_mat[j][k] <= seuil and np.max(Output2_IGT_mat[j][deb : k]) == np.max(Output2_IGT_mat[j][deb : fin]):
+                    # plt.plot(Output2_IGT_mat[j][deb:fin])
+                    # plt.plot([0,fin-deb],[seuil,seuil])
+                    # sys.exit()
+                    time_cuted.append(k)
+                    break
+            
+                    
+        else :
+            cut_pulse.append(False)
+        
+    print(" Il ya eu {} coupure : {}%".format(n_cut, np.round(n_cut/np.shape(CUT_BB)[0]*100, decimals = 2)))
+    print(" Il ya eu {} saturation : {}%".format(n_satur, np.round(n_satur/np.shape(CUT_BB)[0]*100, decimals = 2)))  
+    plt.clf()
+    plt.title("Différentes pressions de stabilisation",fontsize=30, fontweight = 'bold')
+    plt.xlabel('Différents pulses', fontsize=20)
+    plt.ylabel('Pression (kPa)', fontsize=20)
+    plt.xticks(fontsize= 15)
+    plt.yticks(fontsize= 15)
+    plt.plot(convergence, c = 'blue', label = "Valeur de stabilisation de pression")
+    for ind_p, cut_v in enumerate(cut_pulse):
+        if cut_v:
+            plt.scatter(ind_p,convergence[ind_p], marker = 'x' , color = 'red', s = 100, linewidths = 4, label = "Pulse coupé")
+    plt.savefig(trajet + "pression de stabilisation.png",bbox_inches='tight')
+    plt.clf()
+    plt.hist(convergence,bins =120)
+    plt.xlabel('Pression (kPa)', fontsize=20)
+    plt.ylabel('Nombres de pulses', fontsize=20)
+    plt.xticks(fontsize= 15)
+    plt.yticks(fontsize= 15)
+    plt.savefig(trajet + "histo pression.png",bbox_inches='tight')
+    plt.clf()
+    plt.hist(convergence_nosat,bins =120)
+    plt.xlabel('Pression (kPa)', fontsize=20)
+    plt.ylabel('Nombres de pulses', fontsize=20)
+    plt.xticks(fontsize= 15)
+    plt.yticks(fontsize= 15)
+    plt.savefig(trajet + "histo pression no sat.png",bbox_inches='tight')
+    plt.clf()
+    plt.hist(pulses_cuted,bins =8)
+    plt.xlabel('Numéro de pulses', fontsize=20)
+    plt.ylabel('Nombres de pulses', fontsize=20)
+    plt.xticks(fontsize= 15)
+    plt.yticks(fontsize= 15)
+    plt.savefig(trajet + "histo pulses cuted.png",bbox_inches='tight')
+    plt.clf()
+    plt.hist(time_cuted,bins =8)
+    plt.xlabel('fenêtre de coupure', fontsize=20)
+    plt.ylabel('Nombres de pulses', fontsize=20)
+    plt.xticks(fontsize= 15)
+    plt.yticks(fontsize= 15)
+    plt.savefig(trajet + "histo window du cut.png",bbox_inches='tight')
+    plt.clf()
+    
+    # plt.savefig(trajet_retour + "pulse_{}.png".format(j),bbox_inches='tight')
+     
+plt.close("all")
 sys.exit()
 #%%
 plt.close('all')
@@ -116,15 +208,15 @@ def plot_events(arrayPr,Pr_max,matComp1,matComp2,matComp3,arrayComp,titles,t_seq
     ax1.set_ylabel('SEQUENCE TIME (s)')
     ax1.set_xlabel(titles[0])
     ax1.grid('on')
-    im = ax2.imshow(matComp1,aspect='auto',interpolation='none',cmap='turbo',extent=[b_fen[0],b_fen[1],t_sequence,0],vmin=born[0],vmax=born[1])
+    im = ax2.imshow(matComp1,aspect='auto',interpolation='none',cmap='jet',extent=[b_fen[0],b_fen[1],t_sequence,0],vmin=born[0],vmax=born[1])
     ax2.set_title(titles[1][0])
 #    ax2.scatter()
     #xlabel_choice(ax2)    
-    im = ax3.imshow(matComp2,aspect='auto',interpolation='none',cmap='turbo',extent=[b_fen[0],b_fen[1],t_sequence,0],vmin=born[0],vmax=born[1])
+    im = ax3.imshow(matComp2,aspect='auto',interpolation='none',cmap='jet',extent=[b_fen[0],b_fen[1],t_sequence,0],vmin=born[0],vmax=born[1])
     ax3.set_title(titles[1][1])
 #    ax2.scatter()
     #xlabel_choice(ax2)    
-    im = ax4.imshow(matComp3,aspect='auto',interpolation='none',cmap='turbo',extent=[b_fen[0],b_fen[1],t_sequence,0],vmin=born[0],vmax=born[1])
+    im = ax4.imshow(matComp3,aspect='auto',interpolation='none',cmap='jet',extent=[b_fen[0],b_fen[1],t_sequence,0],vmin=born[0],vmax=born[1])
     ax4.set_title(titles[1][2])
 #    ax2.scatter()
     #xlabel_choice(ax2)
@@ -286,6 +378,62 @@ plt.title("Temps de réponse en fenêtres de l'algo", fontsize=20)
 
 #%%
 plt.close("all")
+trajet_retour = trajet
+plt.figure(figsize=(16,9))
+
+path(trajet_retour)
+delai = []
+deb, fin = 50, 280
+for n_cut in [3,5]:
+    indiceee = []
+    n_pulsess=0
+    
+    for decal in [ 0]:
+        for j in range(1,1120):
+            BB_cons = 0
+            UH_cons = 0
+            
+            
+            for elt in  CUT_BB[j]:
+                if elt ==1 : 
+                    BB_cons+=1
+                else :
+                    BB_cons = 0
+                if BB_cons >=n_cut:
+                    n_pulsess+=1
+                    break
+            if BB_cons<n_cut:
+                for k_w in  range(len(CUT_52[j])):
+                    if CUT_52[j][k_w] ==1 or CUT_32[j][k_w] ==1 : 
+                        UH_cons+=1
+                    else :
+                        UH_cons = 0
+                    if UH_cons >=n_cut:
+                        n_pulsess+=1
+                        break
+            if n_cut == 3:
+                plt.clf()
+                plt.plot(C1F0_mat[j+decal][deb:fin] /np.max(C1F0_mat[2:200][deb:fin]- np.min(C1F0_mat)), c = 'orange', marker = '+')
+                plt.title("Différents cut pulse {}  ".format(j), fontsize=20)
+                #plt.plot(commande_0 /np.max(Output2_IGT_mat[2:200][deb:fin]- np.min(commande)), c = 'blue', marker = '+')
+                plt.plot(np.transpose(CUT_BB[j][deb:fin]) , c = 'red', label = 'BB')
+                plt.plot(np.transpose(CUT_52[j][deb:fin]) , c = 'green', label = 'UH 52')
+                plt.plot(np.transpose(CUT_32[j][deb:fin]) , c = 'cyan', label = 'UH 32')
+                plt.plot(np.transpose(UHorBB[j][deb:fin]) , c = 'black', label = 'UH or BB events cut')
+                # if event_ind > 0:
+                #     plt.scatter(event_ind-deb,np.max(commande_0 /np.max(Output2_IGT_mat[2:200][deb:fin])), marker = 'x' , color = 'k', s = 100, linewidths = 3, label = "premiere detection d'event")
+                # if stop_ramp > 0:
+                #     plt.scatter(stop_ramp-deb,np.max(commande_0 /np.max(Output2_IGT_mat[2:200][deb:fin])), marker = 'x' , color = 'red', s = 150, linewidths = 2, label  = "fin de la rampe")
+                plt.legend()
+                #plt.xlim([event_ind-deb-6,event_ind-deb+1])
+                
+                #plt.ylim([-0.05,1.05])
+                plt.grid()
+                plt.savefig(trajet_retour + "pulse_{}.png".format(j),bbox_inches='tight')
+    print(" pour {} consécutifs, il y a {} pulses qui auraient coupés".format(n_cut,n_pulsess))    
+
+#%%
+plt.close("all")
 trajet_retour = 'C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\Analyse_VItro_control\Paul bulles ampli\\fin de array'
 path(trajet_retour)
 delai = []
@@ -326,7 +474,7 @@ plt.legend()
 #     test_exp.pulses[j].plot(traji+"spec_{}".format(j))
 plt.close('all') 
 deb = 7    
-indice = 55
+indice = 0
 commande = Output2_IGT_mat[indice+1][deb:]
 commande_0 = commande - np.min(commande)
 
@@ -336,28 +484,28 @@ plt.figure(figsize=(15,8))
 plt.title("Commande IGT et F0", fontsize=20)
 plt.plot(commande_0 * np.max(C1F0_mat[indice+1][deb:])/np.max(commande_0), c = 'black')
 plt.plot(np.transpose(C1F0_mat[indice+1][deb:]), c = 'blue')    
-# plt.figure(figsize=(15,8))
-# plt.title("UH 3/2f0 et sa limite ", fontsize=20)
-# plt.plot(commande_0 /np.max(commande_0), c = 'blue')
-# plt.plot(np.transpose(UH32_mat[indice+1][deb:]/np.max(UH32_mat[indice+1][deb:])) , c = 'green')
-# plt.plot(np.transpose(CUT_32[indice+1][deb:]) , c = 'black')
-# # plt.plot(np.transpose(mean_UH32[indice+1][deb:])/np.max(UH32_mat[indice+1][deb:]) , c = 'green')
-# # plt.plot(np.transpose(std_UH32[indice+1][deb:])/np.max(UH32_mat[indice+1][deb:]) , c = 'green')
-# plt.plot(np.transpose(lim_UH32[indice+1][deb:])/np.max(UH32_mat[indice+1][deb:]), c = 'red')
-# plt.figure(figsize=(15,8))
-# plt.title("UH 5/2f0 et sa limite ", fontsize=20)
-# plt.plot(commande_0 /np.max(commande_0), c = 'blue')
-# plt.plot(np.transpose(UH52_mat[indice+1][deb:]/np.max(UH52_mat[indice+1][deb:])) , c = 'green')
-# plt.plot(np.transpose(CUT_52[indice+1][deb:]) , c = 'black')
-# plt.plot(np.transpose(lim_UH52[indice+1][deb:]/np.max(mean4_UH52[indice+1][deb:])), c = 'red')
-# plt.show()
-# plt.figure(figsize=(15,8))
-# plt.title("BB et sa limite ", fontsize=20)
-# plt.plot(commande_0 /np.max(commande_0), c = 'blue')
-# plt.plot(np.transpose(BB[indice+1][deb:]/np.max(BB[indice+1][deb:])) , c = 'red')
-# plt.plot(np.transpose(CUT_BB[indice+1][deb:]) , c = 'black')
-# plt.plot(np.transpose(lim_BB[indice+1][deb:]/np.max(mean4_BB[indice+1][deb:])), c = 'red')
-# plt.show()
+plt.figure(figsize=(15,8))
+plt.title("UH 3/2f0 et sa limite ", fontsize=20)
+plt.plot(commande_0 /np.max(commande_0), c = 'blue')
+plt.plot(np.transpose(UH32_mat[indice+1][deb:]/np.max(UH32_mat[indice+1][deb:])) , c = 'green')
+plt.plot(np.transpose(CUT_32[indice+1][deb:]) , c = 'black')
+# plt.plot(np.transpose(mean_UH32[indice+1][deb:])/np.max(UH32_mat[indice+1][deb:]) , c = 'green')
+# plt.plot(np.transpose(std_UH32[indice+1][deb:])/np.max(UH32_mat[indice+1][deb:]) , c = 'green')
+plt.plot(np.transpose(lim_UH32[indice+1][deb:])/np.max(UH32_mat[indice+1][deb:]), c = 'red')
+plt.figure(figsize=(15,8))
+plt.title("UH 5/2f0 et sa limite ", fontsize=20)
+plt.plot(commande_0 /np.max(commande_0), c = 'blue')
+plt.plot(np.transpose(UH52_mat[indice+1][deb:]/np.max(UH52_mat[indice+1][deb:])) , c = 'green')
+plt.plot(np.transpose(CUT_52[indice+1][deb:]) , c = 'black')
+plt.plot(np.transpose(lim_UH52[indice+1][deb:]/np.max(mean4_UH52[indice+1][deb:])), c = 'red')
+plt.show()
+plt.figure(figsize=(15,8))
+plt.title("BB et sa limite ", fontsize=20)
+plt.plot(commande_0 /np.max(commande_0), c = 'blue')
+plt.plot(np.transpose(BB[indice+1][deb:]/np.max(BB[indice+1][deb:])) , c = 'red')
+plt.plot(np.transpose(CUT_BB[indice+1][deb:]) , c = 'black')
+plt.plot(np.transpose(lim_BB[indice+1][deb:]/np.max(mean4_BB[indice+1][deb:])), c = 'red')
+plt.show()
 plt.figure(figsize=(15,8))
 plt.title("Différentes limites dépassées",fontsize=30, fontweight = 'bold')
 plt.plot(commande_0 /np.max(commande_0), c = 'blue')

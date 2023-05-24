@@ -32,24 +32,25 @@ tra7 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\
 tra8 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s5\\"
 
 
-tra4 = "D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_374\\"
-tra44 = "D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_375\\"
-tra444 = "D:\\data_vivo\\20230215_PCDsig_Paul_Manip_souris_588\\"
+tra4 = "D:\\data_vivo\\20230322__mouse_574\\"
+tra44 = "D:\\data_vivo\\20230322__mouse_575\\"
+tra444 = "D:\\data_vivo\\20230322__mouse_588\\"
 
 
-trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\Analyse_mouse_ajd\\"
+trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\analyse_manip_15fev23\\Analyse_mouse_F0_2203\\"
 path(trajet)
 
 
 legend = ["mouse_564_65"]
 legend = ["Paul Control bulles 07_02", "Corentin bulles baseline", "Paul eau ampli", "Paul eau sans ampli", "rat_463_36", "rat_445_75"]
 
-legend = ["mouse 374","mouse 375","mouse 588"]
-legend = ["mouse 588"]
+legend = ["xp 3 mouse 574","xp 3 mouse 575","xp 3 mouse 588"]
 
 
 #VIVO_Mouse587_221122_45
-for i, tra in enumerate([tra444]): #, tra1[tra0, tra1, tra2, tra3]
+for i, tra in enumerate([tra4,tra44,tra444]): #, tra1[tra0, tra1, tra2, tra3]
+    if i <2:
+        continue
     traj = trajet + legend[i]+ "\\"
     path(traj)
     # traj = tra + "Analyse_trueharm\\"
@@ -74,7 +75,7 @@ for i, tra in enumerate([tra444]): #, tra1[tra0, tra1, tra2, tra3]
     data = data_true(np.transpose(data_raw))
     #sys.exit()
     print("Loading done!")
-    test_exp=experiment(25000000,1500000,start=start,end=end)
+    test_exp=experiment(25000000,1500000,start=start,end=end, size_decal = 1271)#1271
     print("\nAdding pulses exp")
     test_exp.add_pulses(data, spacer =100e3)
     print("Adding done!")
@@ -83,9 +84,9 @@ for i, tra in enumerate([tra444]): #, tra1[tra0, tra1, tra2, tra3]
     print("\nPLot des différents indices")
     print(legend[i])
     test_exp.plot_indice_RAMP("treatment",traj,x_press, vivo= True, all_plot= True)
-    for std in range(5,10,2):
-            print("STD = ", std)
-            test_exp.plot_indice_RAMP_std(legend[i],traj+"MOY_std_{}\\".format(std),still_wind = 15, std_tresh = std, true_harm = False, plot_true = True)
+    # for std in range(5,10,2):
+    #         print("STD = ", std)
+    #         test_exp.plot_indice_RAMP_std(legend[i],traj+"MOY_std_{}\\".format(std),still_wind = 40, std_tresh = std, true_harm = False, plot_true = True)
        
     print("plot cartes de pression raw")
     n_pulse = np.shape(data)[0]

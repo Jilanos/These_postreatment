@@ -8,116 +8,134 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from classes import *
+from scipy import signal
 import sys 
 import gc
 
 gc.collect(generation=2)
 
 #VITRO
-tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
-traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_PULSE\\'
 tra = 'C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\'
-traj='C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_PULSE\\'
+traj='C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_19\\Analyse_PULSE_eng_\\'
+
+tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
+traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_PULSE_enG_ISTU_bixcolor\\'
+
+tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
+traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_PULSE_enG_ISTU_bixcolor\\'
 
 
+tra_0 = 'D:\\code_UH_long\\GENE_MOD\\'
+traj_0 = 'C:\\Users\MIDAS\\Desktop\\plot_phd_pulse_bbcomp\\'
+path(traj_0)
 
-path(traj)
+for indice_d, tra_1 in enumerate(["iter_20\\","iter_21\\", "iter_13\\"]):
+    print("EXP : " + tra_1)
+    tra = tra_0 + tra_1
+    traj = traj_0+tra_1
+    path(traj)
 
-doss=["PULSE_0_75","PULSE_240_75","PULSE_80_75","PULSE_27_75"]  
-doss=["PULSE_0_40","PULSE_666_40","TRI_80_75","TRI_27_75"]     
-legend=["Eau pure","Sonovue dilué 240 fois","Sonovue dilué 80 fois","Sonovue dilué 27 fois"]
-
-start,end = 10000,236000
-start,end = 0,-1
-
-test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-nexp=2
-fit = np.array([4.66745471*2, 5.80567673])
-fit = np.array([7.92060316*2, 2.42161125])
-pression_max = 500
-pression_min = 1
-bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
-bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
-bitpress = int(np.round(((400-fit[1])/fit[0])))
-nbit=[1,bitmax]
-
-rep = 6
-order = True
-
-for j in range(nexp):
-    test_m_exp.creat_expe()
-
-for i in range(0,nexp):
-    print("\nloading data : "+doss[i])
-    dossier=tra+doss[i]
-    traj_comp = tra+doss[i]
-    path(traj_comp)
-    if not(order):
-        data = np.load(dossier+'\\data.npy') #
-        amp = np.load(dossier+'\\amp.npy') #_order
-        print("Reordering")
-        data, amp = reorder(data,amp)
-        print("Saving ordered datas")
-        np.save(dossier+'\\data_o.npy',data)
-        np.save(dossier+'\\amp_o.npy',amp)
-    else :
-        data = np.load(dossier+'\\data_o.npy') #
-    sys.exit()
-    print("adding pulses multi exp")
-    test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
-    print('done')
-    del data
-    gc.collect(generation=2)
-
-
-
-#%%
-nom_doss = "cartes_de_pression\\"
-traj_carte = traj + nom_doss
-path(traj_carte)
-traj1= traj_carte+"raw\\"
-path(traj1)
-
-print("plot cartes de pression raw")
-test_m_exp.plot_windowed(traj1,nbit,fit,10,100,1,legend)
-
-traj2= traj_carte+"moy\\"
-path(traj2)
-print("plot cartes de pression moyennées")
-test_m_exp.plot_windowed(traj2,nbit,fit,10,100,rep,legend)
-
-#%%
-from classes import *
-start,end = 10000,236000
-
-test_m_exp=experiment_mult(25000000,1500000,start=start,end=end)
-
-for j in range(nexp):
-    test_m_exp.creat_expe()
-
-for i in range(0,nexp):
-    print("\nloading data : "+doss[i])
-    dossier=tra+doss[i]
-    traj_comp = tra+doss[i]
-    path(traj_comp)
-    data = np.load(dossier+'\\data_o.npy') #
-
-    test_exp=experiment(25000000,1500000,start=start,end=end)
-    print("adding pulses exp")
-    test_exp.add_pulses(data[:rep*(bitmax-1)], spacer =100e3)
-    test_exp.plot_indice_component(traj+doss[i]+"_Components\\",nbit,fit,rep)
-    test_exp.plot_indice_bis(legend[i],traj,rep,nbit,legend,fit)
-    del test_exp
     
-    print("adding pulses multi exp")
-    test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
-    print('done')
-    del data
-    gc.collect(generation=2)
+    doss=["PULSE_0_40","PULSE_666_40","TRI_80_75","TRI_27_75"]
+    doss=["PULSE_0_75","PULSE_240_75","PULSE_80_75","PULSE_27_75"]
+    if indice_d==2:   
+        doss=["bubbles_0_75","bubbles_240_75","bubbles_80_75","bubbles_27_75"] 
+    legend=["Water","Sonovue diluted 240 times","Sonovue diluted 80 times","Sonovue diluted 27 times"]
+    legend=["Eau","microbulles dilution 1:240","microbulles dilution 1:80","microbulles dilution 1:27"]
+    legend=["Eau","Dilution 1:240","Dilution 1:80","Dilution 1:27"]
+    
+    start,end = 10000,236000
+    start,end = 0,-1
+    
+    test_m_exp=experiment_mult(25000000,1500000,start=start,end=end,size_decal = 1024)
+    nexp=4
+    fit = np.array([4.66745471*2, 5.80567673])
+    fit = np.array([7.92060316*2, 2.42161125])
+    pression_max = 1100
+    pression_min = 1
+    bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
+    bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
+    bitpress = int(np.round(((400-fit[1])/fit[0])))
+    nbit=[1,bitmax]
+    
+    rep = 20
+    order = True
+    # for j in range(nexp):
+    #     test_m_exp.creat_expe()
+    
+    # for i in range(0,nexp):
+    #     print("\nloading data : "+doss[i])
+    #     dossier=tra+doss[i]
+    #     traj_comp = tra+doss[i]
+    #     path(traj_comp)
+    #     if not(order):
+    #         data = np.load(dossier+'\\data.npy') #
+    #         amp = np.load(dossier+'\\amp.npy') #_order
+    #         print("Reordering")
+    #         data, amp = reorder(data,amp)
+    #         print("Saving ordered datas")
+    #         np.save(dossier+'\\data_o.npy',data)
+    #         np.save(dossier+'\\amp_o.npy',amp)
+    #     else :
+    #         data = np.load(dossier+'\\data_o.npy') #
+    #     print("adding pulses multi exp")
+    #     test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
+    #     print('done')
+    #     del data
+    #     gc.collect(generation=2)
+    
+    
+    # #%%
+    # nom_doss = "cartes_de_pression\\"
+    # traj_carte = traj + nom_doss
+    # path(traj_carte)
+    # traj1= traj_carte+"raw\\"
+    # path(traj1)
+    
+    # print("plot cartes de pression raw")
+    # test_m_exp.plot_windowed(traj1,nbit,fit,10,100,1,legend)
+    
+    # traj2= traj_carte+"moy\\"
+    # path(traj2)
+    # print("plot cartes de pression moyennées")
+    # test_m_exp.plot_windowed(traj2,nbit,fit,10,100,rep,legend)
 
-nom = "différents_indices"
-dossier = traj+nom+"\\"
-test_m_exp.plot_indice_together_grp(nom,dossier,nbit,rep,legend,fit = list(fit))
+#%%
+    start,end = 5000, 236000
+    
+    #legend=["Water","Microbubbles diluted 240 times","Microbubbles diluted 80 times","Microbubbles diluted 27 times"]
+    
+    legend=["Eau","Microbulles dilution 240","Microbulles dilution 80","Microbulles dilution 27"]
+    title=["Water","Dilution 1:240","Dilution 1:80","Dilution 1:27"]
+    title=["Eau","Dilution 1:240","Dilution 1:80","Dilution 1:27"]
+    test_m_exp=experiment_mult(25000000,1500000,start=start,end=end,size_decal = 1024)
+    
+    for j in range(nexp):
+        test_m_exp.creat_expe()
+    
+    for i in range(0,nexp):
+        print("\nloading data : "+doss[i])
+        dossier=tra+doss[i]
+        traj_comp = tra+doss[i]
+        path(traj_comp)
+        data = np.load(dossier+'\\data_o.npy') #
+    
+        test_exp=experiment(25000000,1500000,start=start,end=end,size_decal = 1024)
+        print("adding pulses exp")
+        test_exp.add_pulses(data[:rep*(bitmax-1)], spacer =100e3)
+        test_exp.plot_indice_component(traj+doss[i]+"_Components\\",nbit,fit,rep)
+        test_exp.plot_indice_bis(legend[i],title[i],traj,rep,nbit,legend,fit)
+        del test_exp
+        
+        print("adding pulses multi exp")
+        test_m_exp.add_pulses(data[:rep*(bitmax-1)], i, spacer =100e3)
+        print('done')
+        del data
+        gc.collect(generation=2)
+        
+    nom = "différents_indices"
+    dossier = traj+nom+"\\"
+    test_m_exp.plot_indice_together_grp(nom,dossier,nbit,rep,legend,fit = list(fit))
 
 sys.exit()
 #%%
@@ -227,21 +245,15 @@ plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
 
 #%%
-traj='C:\\Users\\PM263553\\Desktop\\These\\presentation\\CAMI2\\'
-Y = data[-10]
-X = [i / 25000. for i in range(len(Y))]
-
-plott(X,Y,traj+"pulse",color='blue',titre = "Ultrasound pulse shot at 1.5MPa",Xlabel="Time (ms)",Ylabel="Magnitude (mV)",color_leg = 'black')
 
 
-
-# Y = data[1500,:40000]
-# X = np.arange(len(Y))/25000.
-# plt.plot(X,Y)
-# plt.xlabel("Temps (ms)", fontsize = 20)
-# plt.ylabel("Amplitude (mV)", fontsize = 20)
-# plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
-# plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
-# plt.xticks(fontsize=20)
-# plt.yticks(fontsize=20)
+Y = data[:40000]
+X = np.arange(len(Y))/25000.
+plt.plot(X,Y)
+plt.xlabel("Temps (ms)", fontsize = 20)
+plt.ylabel("Amplitude (mV)", fontsize = 20)
+plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+plt.title("Tir ultrasonore tiré à 750kPa", fontsize = 30, fontweight="bold")
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
 

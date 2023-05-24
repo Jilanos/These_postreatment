@@ -8,24 +8,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+from scipy import signal
 
 plt.close("all")
 
 
-def data_true(array):
-    for j in range(len(array)):
-        if np.max(array[j])==0:
-            return array[:j]
-    return array
+def gradation(n):
+    if n==0 :
+        return 0
+    else :
+        return (n-1)*0.20
 
-def plott(X,Y,chemin,color='black',titre = "titre",Xlabel="X axis",Ylabel="Y axis",color_leg = 'black'):
+def plott(X,Y,chemin,color='black',titre = "titre",Xlabel="X axis",Ylabel="Y axis"):
     plt.figure(figsize = (20,11))
     plt.plot(X,Y,c=color)
-    plt.title(titre,color=color_leg,fontsize=30, fontweight = 'bold')
+    plt.title(titre,color=color,fontsize=30, fontweight = 'bold')
     plt.xlabel(Xlabel,fontsize=20)
-    plt.ylabel(Ylabel, color=color_leg,fontsize=20)
-    Ymax = 1.01*np.amax(Y) * 1.1
-    Ymin = np.amin(Y) * 1.1 #
+    plt.ylabel(Ylabel, color=color,fontsize=20)
+    Ymax = 1.01*np.amax(Y)
+    Ymin = 0.99*np.amin(Y)
     plt.ylim([Ymin, Ymax])    
     plt.grid(True)
     plt.tight_layout()
@@ -33,29 +34,6 @@ def plott(X,Y,chemin,color='black',titre = "titre",Xlabel="X axis",Ylabel="Y axi
     plt.savefig(chemin,bbox_inches='tight')
     plt.close("all")
     return 1
-     
-def max_pos(array):
-    n=len(array)
-    maxi,Imaxi = array[0],0
-    for i in range(n):
-        elt = array[i]
-        if elt>maxi:
-            maxi,Imaxi=elt,i
-    return maxi,Imaxi 
-
-
-def sortir_bruit(signal, seuil_min, debut_detec):
-    n = len(signal)
-    res = np.zeros((n))
-    for j in range(debut_detec, n):
-        moy = np.mean(signal[:j])
-        std = np.std(signal[:j])
-        depassement = (signal[j]-moy)/std
-        if depassement >= seuil_min:
-            res[j] = depassement
-    maxi, maxi_ind = max_pos(res)
-    return maxi, maxi_ind
-
 
 def algo(amp,val,rep,seuil,pas,p,val_dic):
     ptitpas = max([int(pas/2),1])
@@ -113,13 +91,14 @@ def valeurs(data, press_max):
     VAL = []
     m = np.mean(data, axis = 0)
     m = m-np.mean(m)
-    size_decal = 2048
+    size_decal = 1024
     size_window = 2048
-    Nb_spectres=len(m) //size_decal
+    Nb_spectres=len(m) //size_decal-1
     
     for i_spectro in range(Nb_spectres):
         sig=m[i_spectro*size_decal:i_spectro*size_decal+size_window]
-        Sig_fen=np.hanning(size_window)*sig
+        #Sig_fen=np.hanning(size_window)*sig
+        Sig_fen=signal.windows.flattop(size_window)*sig
         VAL.append(abs(np.min(Sig_fen)))
     max_val = np.mean(np.array(VAL[-4:]))
     conv = press_max / max_val
@@ -222,8 +201,7 @@ def max_detect(array):
         return maxi,Imaxi
     else :
         return moy, n//2
-
-
+    
 def peak_detect_pos(array):
     n=len(array)
     maxi,Imaxi = array[0],0
@@ -299,7 +277,7 @@ class temp_sample():
         self.delta_harm_n = find_nearest(self.frequencies, self.delta_harm)
         self.delta_BB_n = find_nearest(self.frequencies, self.delta_BB)
         
-        self.broadband_fft_copy=np.copy(self.fftsimple)
+        self.broadband_fft_copy=np.mean(self.spectrogram[0:12],axis=0)
         self.indice_harm=np.zeros((self.n_harm+1))
         self.indice_Uharm=np.zeros((self.n_harm+1))
         self.indice_BB=0
@@ -312,6 +290,7 @@ class temp_sample():
         self.indice_Uharm_norm_div_w=np.zeros((self.n_harm+1,self.n_window))
         self.indice_Uharm_norm_div=np.zeros((self.n_harm+1))
         self.indice_BB_w=np.zeros((self.n_window))
+        self.indice_BB_sliced_w=np.zeros((self.num_BB,self.n_window))
         self.fondamental_w = np.zeros((self.n_window))
         self.indice_calc_windowed()
         self.BB_calc_windowed()
@@ -335,6 +314,8 @@ class temp_sample():
         for n in range(self.n_window):
             for i in range(self.n_harm+1):
                 self.indice_harm_w[i,n]=self.calcul_indice(self.spectrogram[n,:],self.freq_harm_n[i]-self.delta_harm_n,self.freq_harm_n[i]+self.delta_harm_n+1)
+            for i in range(self.num_BB):
+                self.indice_BB_sliced_w[i,n]=self.calcul_indice(self.spectrogram[n,:],self.freq_BB_n[i]-self.delta_BB_n,self.freq_BB_n[i]+self.delta_BB_n+1)
             for i in range(self.n_harm+1):
                 self.indice_Uharm_w[i,n]=self.calcul_indice(self.spectrogram[n,:],self.freq_Uharm_n[i]-self.delta_Uharm_n,self.freq_Uharm_n[i]+self.delta_Uharm_n+1)
             self.fondamental_w[n]=self.calcul_indice(self.spectrogram[n,:],self.freq_fonda_n-self.delta_harm_n,self.freq_fonda_n+self.delta_harm_n+1)
@@ -349,8 +330,8 @@ class temp_sample():
     def BB_calc(self):
         self.broadband_value=np.array([])
         for i in range(self.num_BB):
-            self.indice_BB_sliced[i]=np.mean(self.fftsimple[self.freq_BB_n[i]-self.delta_BB_n:self.freq_BB_n[i]+self.delta_BB_n])
-            self.broadband_value=np.concatenate((self.broadband_value,self.fftsimple[self.freq_BB_n[i]-self.delta_BB_n:self.freq_BB_n[i]+self.delta_BB_n])) 
+            self.indice_BB_sliced[i]=np.mean(self.broadband_fft_copy[self.freq_BB_n[i]-self.delta_BB_n:self.freq_BB_n[i]+self.delta_BB_n])
+            self.broadband_value=np.concatenate((self.broadband_value,self.broadband_fft_copy[self.freq_BB_n[i]-self.delta_BB_n:self.freq_BB_n[i]+self.delta_BB_n])) 
         self.indice_BB=np.mean(self.broadband_value)
 
     def BB_calc_windowed(self):
@@ -362,19 +343,18 @@ class temp_sample():
         
     def spectogramage(self):
         SIG_FFT=[]
-        soustraction = 0
-        if self.size_decal<self.size_window :
-            soustraction = 1
-        Nb_spectres=self.num_samples //self.size_decal-soustraction
+        Nb_spectres=self.num_samples //self.size_decal-1
         for i_spectro in range(Nb_spectres):
             sig=self.data[i_spectro*self.size_decal:i_spectro*self.size_decal+self.size_window]
-            Sig_fen=np.hanning(self.size_window)*sig
+            #Sig_fen=np.hanning(self.size_window)*sig
+            Sig_fen=signal.windows.flattop(self.size_window)*sig
             SIG_FFT.append(abs(np.fft.fft(Sig_fen))/self.size_window)
         return np.array(SIG_FFT)
     
     def spectoUnik(self):
         sig=self.data
-        Sig_fen=np.hanning(self.num_samples)*sig
+        #Sig_fen=np.hanning(self.num_samples)*sig
+        Sig_fen=signal.windows.flattop(self.num_samples)*sig
         SIG_FFT=abs(np.fft.fft(Sig_fen))/self.num_samples
         return np.array(SIG_FFT)
     
@@ -430,7 +410,7 @@ class temp_sample():
         plt.ylabel('Magnitude',fontsize=20)
         plt.yscale('log')
         plt.xlabel('Frequency [MHz]',fontsize=20)
-        plt.title('Averaged spectrum of the pulse with visualization of the different frequency bands',fontsize=20, fontweight = 'bold')#Spectre moyenné du pulse avec visualisation des différentes bandes fréquentielles
+        plt.title('Spectre moyenné du pulse avec visualisation des différentes bandes fréquentielles',fontsize=20, fontweight = 'bold')
         plt.xlim([self.freq_emiss/1e6/5, (self.freq_harm[self.n_harm-1]+self.delta_harm)/1e6*1.01])#(harm_f[-2]-2*harm_df)/1e6])
         plt.ylim([Ymin, Ymax])
         #plt.xlim([self.freq_emiss/1e6/5, 9.5*1.01])#(harm_f[-2]-2*harm_df)/1e6])
@@ -531,9 +511,9 @@ class experiment():
     
     
     def plot_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)], ramp = False):
-        y_axis = 'Pressure (kPa)'
+        y_axis = 'Pressure (KPa)'
         if ramp:
-            y_axis = 'Different pulses'# (ramping pressure)
+            y_axis = 'Différents tirs'
             
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
@@ -558,13 +538,16 @@ class experiment():
         amp=np.arange(nbit[0],(nbit[1]-1)*30+1)
         pression=[fit[0]*j+fit[1] for j in amp]
         self.n_window = self.pulses[0].n_window
-        nom_str = ["\\H_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_norm_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\BB_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value)]
+        nom_str = ["\\H_n{}_perLow{}_perHigh{}_ramp.png".format(n,mini_value,maxi_value),"\\UH_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_norm_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\BB_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value)]
         title_str = ["Composante harmonique","Composante ultra-harmonique","Composante ultra-harmonique émergente","Composante inertielle"]
         for j in range(n_plot):
             plt.clf()
             plt.title(title_str[j],fontsize=18, fontweight = 'bold')
             mini=np.percentile(plot[j],mini_value)
             maxi=np.percentile(plot[j],maxi_value)
+            print(np.shape(plot[j])[1]*self.size_window/self.freq_ech*1000.)
+            print((nbit[1])*fit[0]+fit[1])
+            print((nbit[0])*fit[0]+fit[1])
             plt.imshow(plot[j,:,:],aspect='auto',interpolation='none',cmap='turbo',extent=[0,np.shape(plot[j])[1]*self.size_window/self.freq_ech*1000.,(nbit[1])*fit[0]+fit[1],(nbit[0])*fit[0]+fit[1]], vmin=mini,vmax=maxi)  #,extent=[0,pulse_time_ms,seq_time_s,0]   ,mapval  , vmin=mapval[i*2],vmax=mapval[i*2+1]
             plt.xlabel('Intra-Pulse Time'.upper()+' (ms)')
             plt.ylabel(y_axis)
@@ -676,10 +659,10 @@ class experiment():
         
     def plot_indice(self,nom,chemin,amp = False):
         path(chemin)
-        # chemin_log=chemin+'\\log\\'
-        # chemin_lin=chemin+'\\linear\\'
-        # path(chemin_log)
-        # path(chemin_lin)
+        chemin_log=chemin+'\\log\\'
+        chemin_lin=chemin+'\\linear\\'
+        path(chemin_log)
+        path(chemin_lin)
         plot=np.zeros((4,self.n_pulse))
         n_plot = 4
         temp = np.zeros((2,n_plot))
@@ -697,16 +680,15 @@ class experiment():
         redblue=['b','g','r','teal','black','black','black']
         # Stable cavitation dose
         
-        for i in range(0,3):
+        for i in range(0,4):
             fig, host = plt.subplots(figsize=(20,11)) # (width, height) in inches
             host.plot(pression,plot[i,:],  c=redblue[i])
-            #if amp != False:
-            par1 = host.twinx()
-            par1.plot(pression,amp,color='gray')
+            if amp != False:
+                par1 = host.twinx()
+                par1.plot(pression,amp,color='gray')
             
             plt.title(plot_legend[i],color=redblue[i],fontsize=30, fontweight = 'bold')
-            host.set_xlabel('Pulses (kPa)',fontsize=20)
-            host.set_xlabel('Different pulses',fontsize=20)
+            host.set_xlabel('Pression (KPa)',fontsize=20)
             host.set_ylabel('Magnitude [a.u.]', color=redblue[i],fontsize=20)
             par1.set_ylabel('Pulse amplitude [bit IGT]', color=redblue[i],fontsize=20)
             Ymax = 1.01*np.amax(plot[i,:])
@@ -716,21 +698,20 @@ class experiment():
             host.grid(True)
             fig.tight_layout()
             host.set_yscale('linear')
-            plt.savefig(chemin+nom_img[i]+'_linear.png',bbox_inches='tight')  
-            # host.set_yscale('log')
-            # plt.savefig(chemin_log+nom_img[i]+'_linear.png',bbox_inches='tight') 
+            plt.savefig(chemin_lin+nom_img[i]+'_linear.png',bbox_inches='tight')  
+            host.set_yscale('log')
+            plt.savefig(chemin_log+nom_img[i]+'_linear.png',bbox_inches='tight') 
             plt.close("all")
          
-    def plot_indice_bis(self,nom,chemin,n,nbit,legend,fit = False):
+    def plot_indice_bis(self,nom,title,chemin,n,nbit,legend,fit = False):
         path(chemin)
         n_plot=4
         plot=np.zeros((n_plot,self.n_pulse//n,3))
         plot_raw=np.zeros((n_plot,self.n_pulse//n,3))
 
         temp = np.zeros((n_plot,n))
-        print(np.shape(temp[1]))
         for j in range(self.n_pulse//n):
-            temp[0] =[np.mean(self.pulses[j*n+a].indice_harm[1:-1]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
+            temp[0] =[np.mean(self.pulses[j*n+a].indice_harm[1:3]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
             temp[1] =[np.mean(self.pulses[j*n+a].indice_Uharm[1:4]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
             temp[2] =[np.mean(self.pulses[j*n+a].indice_BB) for a in range(n)] #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
             temp[3] =[np.mean(self.pulses[j*n+a].indice_Uharm_norm_div[1:4]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
@@ -745,40 +726,46 @@ class experiment():
             plot[k]=plot[k]/np.max(plot[k,:,0])
             
         plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les 3xUH-30xBB","Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
+        label = ["Harmonics", "Ultraharmonics", "Broadband noise"]
         label = ["Harmoniques", "Ultra-harmoniques", "Bruit large bande"]
         nom_img=["harm","U_harm","BB","ratio_"+nom+"_all","ratio_"+nom+"_start","ratio_"+nom+"_end"]
         colors=['blue','green','red','forestgreen','dodgerblue','gold']
         pression = np.arange(self.n_pulse)
-        if fit==False : 
-            pression = np.arange(self.n_pulse//n)
-            fit = np.array([1, 0])
-        else :
-            amp=np.arange(nbit[0],nbit[1])
-            pression=[fit[0]*j+fit[1] for j in amp]
+        # if fit==False : 
+        #     pression = np.arange(self.n_pulse//n)
+        #     fit = np.array([1, 0])
+        # else :
+        amp=np.arange(nbit[0],nbit[1])
+        pression=[fit[0]*j+fit[1] for j in amp]
         redblue=['b','g','r','teal','black','black','black']
         # Stable cavitation dose
         
         plt.figure(figsize=(20,11)) # (width, height) in inches
         for i in range(0,3):
             plt.plot(pression,plot[i,:,0], c=redblue[i],label=label[i])
-            #plt.fill_between(pression,plot_raw[i,:,1],plot[i,:,2], color=redblue[i],alpha=0.2)
+            plt.fill_between(pression,plot[i,:,1],plot[i,:,2], color=redblue[i],alpha=0.2)
             
-            plt.xlabel('Pressure (kPa)',fontsize=20)
-            plt.xlabel('Different pulses',fontsize=20)
-            plt.ylabel('Magnitude [a.u.]', color=redblue[i],fontsize=20)
+            plt.xlabel('Pression (kPa)',fontsize=20)
+            plt.ylabel('Amplitude [a.u.]', color=redblue[i],fontsize=20)#Magnitude
             
-            plt.legend(fontsize=20)
-            Ymax = 1.01*np.amax(plot_raw[i,:])
-            Ymin = 0.99*np.amin(plot_raw[i,:])
-            # plt.ylim([Ymin, Ymax]) 
-            # plt.ylim([Ymin, 0.04]) 
-            plt.grid(True)
-        plt.title("Différentes composantes : "+nom,color='black', fontsize=30, fontweight = 'bold')
+            plt.legend(fontsize=20, loc = 'upper left')
+            Ymax = 1.01*np.amax(plot[i,:])
+            Ymin = 1.01*np.amin(plot[i,:])
+            plt.ylim([Ymin, Ymax]) 
+            plt.ylim([0, 1.08])
+            plt.grid(True) #Normalized indexes
+        plt.title("Indices normalisés       "+title,color='black', fontsize=30, fontweight = 'bold')
+    
+        plt.xlim([0, np.max(pression)]) 
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        plt.xlabel('Pression (kPa)',fontsize=25)
+        plt.ylabel('Amplitude [a.u.]', color=redblue[i],fontsize=25)
         plt.savefig(chemin+nom+'.png',bbox_inches='tight') 
         plt.close("all")    
         
         
-    def plot_indice_RAMP(self,nom,chemin,pression,vivo=False, all_plot=False):
+    def plot_indice_RAMP(self,nom,title,chemin,pression):
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         chemin_lin=chemin
@@ -788,13 +775,11 @@ class experiment():
         plot_raw=np.zeros((n_plot,n_window,3))
         plot=np.zeros((n_plot,n_window,3))
         temp = np.zeros((n_plot,self.n_pulse,n_window))
-        temp_norm = np.zeros((n_plot,self.n_pulse,n_window))
         for j in range(self.n_pulse):
             temp[0,j] =np.mean(self.pulses[j].indice_harm_w[1:-1],axis=0)#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
             temp[1,j] =np.mean(self.pulses[j].indice_Uharm_w[1:4],axis=0) #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
             temp[2,j] =self.pulses[j].indice_BB_w  #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
             #temp[3,j] =np.mean(self.pulses[j].indice_Uharm_norm_div_w[1:4],axis=0) #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
-        
         for k in range(n_plot):
             plot_raw[k,:,0]=np.mean(temp[k], axis=0)
             plot_raw[k,:,1]=plot_raw[k,:,0]+np.std(temp[k], axis=0)
@@ -803,17 +788,10 @@ class experiment():
             plot[k]=plot_raw[k]-np.min(plot_raw[k,:,0])
         for k in range(n_plot):
             plot[k]=plot[k]/np.max(plot[k,:,0])
-        
-        for k in range(n_plot):
-            for j in range(self.n_pulse):
-                temp_norm[k,j]=temp[k,j]-np.min(temp[k,j])
-        for k in range(n_plot):
-            for j in range(self.n_pulse):
-                temp_norm[k,j]=temp_norm[k,j]/np.max(temp_norm[k,j])
             
             
         plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(7),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
-        nom_img=["harm","U_harm","BB","U_harm_norm","UH_BB","ratio_"+nom+"_all","ratio_"+nom+"_start","ratio_"+nom+"_end"]
+        nom_img=["harm","U_harm","BB","U_harm_norm","UH_BB","ratio_"+title+"_all","ratio_"+title+"_start","ratio_"+title+"_end"]
         colors=['black','red','peru','forestgreen','dodgerblue','gold']
         label = ["Harmoniques", "Ultra-harmoniques", "Bruit large bande"]
         redblue=['b','g','r','teal','m','black','black','black']
@@ -822,293 +800,22 @@ class experiment():
         for i in range(n_plot):
             plt.plot(pression,plot[i,:,0], c=redblue[i],label=label[i])
             plt.fill_between(pression,plot[i,:,1],plot[i,:,2], color=redblue[i],alpha=0.2)
-        plt.legend(fontsize=20)
-        plt.title("Différentes composantes : "+nom,color="black",fontsize=22, fontweight = 'bold')
+        plt.legend(fontsize=20, loc = 'upper left')
+        plt.title("Indices normalisés       "+title,color="black",fontsize=22, fontweight = 'bold')
         plt.xlabel('Pression (kPa)',fontsize=20)
         plt.ylabel('Amplitude normalisée',fontsize=20)
         #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
         Ymax = 1.01*np.amax(plot[:,:,1])
         Ymin = 0.99*np.amin(plot[:,:,2])
-        plt.ylim([Ymin, Ymax])    
+        plt.ylim([-0.1, 1.1])    
         plt.grid(True)
-        plt.tight_layout()
+        plt.tight_layout()    
+        plt.xlim([0, np.max(pression)]) 
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
         plt.yscale('linear')
-        plt.savefig(chemin_lin+nom+'.png',bbox_inches='tight')     
-        plt.clf()
-        if vivo :
-            traj = chemin_lin + nom+"\\"
-            path(traj)
-            for k in range(self.n_pulse):
-                moy = np.mean(temp_norm[1:,k,:],axis=1)
-                std = np.std(temp_norm[1:,k,:],axis=1)
-                maxi = np.max(temp_norm[1:,k,:],axis=1)
-                if maxi[0]>moy[0]+5*std[0] or maxi[1]>moy[1]+5*std[1] or all_plot:
-                    for i in range(n_plot):
-                        plt.plot(pression,temp_norm[i,k,:], c=redblue[i],label=label[i])
-                    plt.plot([0,pression[-1]],[moy[0]+5*std[0],moy[0]+5*std[0]],c=redblue[1])
-                    plt.plot([0,pression[-1]],[moy[1]+5*std[1],moy[1]+5*std[1]],c=redblue[2])
-                    plt.legend(fontsize=20)
-                    plt.title("Différentes composantes, pulse {}".format(k),color="black",fontsize=22, fontweight = 'bold')
-                    plt.xlabel('Fenêtres temporelles ',fontsize=20)
-                    plt.ylabel('Amplitude normalisée',fontsize=20)
-                    #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
-                    # Ymax = 1.01*np.amax(plot[:,:,1])
-                    # Ymin = 0.99*np.amin(plot[:,:,2])
-                    plt.ylim([0, 1])    
-                    plt.grid(True)
-                    plt.tight_layout()
-                    plt.yscale('linear')
-                    plt.savefig(traj+nom+'_{}.png'.format(k),bbox_inches='tight')
-                    plt.clf()
-                  
-        plt.close("all") 
-            
-    def plot_indice_RAMP_std(self,nom,chemin,still_wind = 10, std_tresh = 3, true_harm = False, plot_true =True):
-        if not os.path.isdir(chemin): # check if folder exists, otherwise create it
-            os.mkdir(chemin)
-        pression = [i for i in range(self.pulses[0].n_window)]
-        chemin_lin=chemin
-        n_window = self.pulses[0].n_window
-        ##HARMONIQUES
-        n_plot = 3
-        plot_raw=np.zeros((n_plot,n_window,3))
-        plot=np.zeros((n_plot,n_window,3))
-        temp = np.zeros((n_plot,self.n_pulse,n_window))
-        temp_norm = np.zeros((n_plot,self.n_pulse,n_window))
-        for j in range(self.n_pulse):
-            temp[0,j] =np.mean(self.pulses[j].indice_harm_w[1:-1],axis=0)#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
-            temp[1,j] =np.mean(self.pulses[j].indice_Uharm_norm_div_w[1:4],axis=0) #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
-            temp[2,j] =self.pulses[j].indice_BB_w  #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
-           
-        for k in range(n_plot):
-            plot_raw[k,:,0]=np.mean(temp[k], axis=0)
-            plot_raw[k,:,1]=plot_raw[k,:,0]+np.std(temp[k], axis=0)
-            plot_raw[k,:,2]=plot_raw[k,:,0]-np.std(temp[k], axis=0)
-        for k in range(n_plot):
-            plot[k]=plot_raw[k]-np.min(plot_raw[k,:,0])
-        for k in range(n_plot):
-            plot[k]=plot[k]/np.max(plot[k,:,0])
-        
-
-        for k in range(n_plot):
-            for j in range(self.n_pulse):
-                temp_norm[k,j]=temp[k,j]-np.min(temp[k,j])
-                
-                
-        if true_harm :
-            maxima = np.max(temp_norm[0,:,:], axis = 1)
-            #print(np.shape(maxima))
-        else :
-            maxima = np.ones((self.n_pulse))
-            #(np.shape(maxima))
-        
-        for k in range(n_plot):
-            for j in range(self.n_pulse):
-                temp_norm[k,j]=temp_norm[k,j]/np.max(temp_norm[k,j]) * maxima[j]
-            
-            
-        plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(7),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
-        nom_img=["harm","U_harm","BB","U_harm_norm","UH_BB","ratio_"+nom+"_all","ratio_"+nom+"_start","ratio_"+nom+"_end"]
-        colors=['black','red','peru','forestgreen','dodgerblue','gold']
-        label = ["Harmoniques", "Ultra-harmoniques", "Bruit large bande"]
-        redblue=['b','g','r','teal','m','black','black','black']
-        # Stable cavitation dose
-        fig=plt.figure(figsize=(20,11))
-        for i in range(n_plot):
-            plt.plot(pression,plot[i,:,0], c=redblue[i],label=label[i])
-            plt.fill_between(pression,plot[i,:,1],plot[i,:,2], color=redblue[i],alpha=0.2)
-        plt.legend(fontsize=20)
-        plt.title("Différentes composantes : "+nom,color="black",fontsize=22, fontweight = 'bold')
-        plt.xlabel('Fenêtres temporelles',fontsize=20)
-        plt.ylabel('Amplitude normalisée',fontsize=20)
-        #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
-        Ymax = 1.01*np.amax(plot[:,:,1])
-        Ymin = 0.99*np.amin(plot[:,:,2])
-        plt.ylim([-0.01, 1.01])    
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('linear')
-        plt.savefig(chemin_lin+'00'+nom+'.png',bbox_inches='tight')     
-        plt.clf()
-        uh,bb,both = 0, 0, 0
-        win_BB = []
-        win_UH = []
-        amplit_rela_UH = []
-        UH_abs = []
-        UH_abs_j = []
-        amplit_rela_BB = []
-        BB_abs = []
-        BB_abs_j = []
-        harm_amp_UH = []
-        harm_amp_BB = []
-        for k in range(self.n_pulse):#
-            signal =temp_norm[1:,k,:]
-            signal_UH = signal[0]
-            signal_BB = signal[1]
-            max_UH, w_ind_UH = sortir_bruit(signal_UH, std_tresh, still_wind)
-            max_BB, w_ind_BB = sortir_bruit(signal_BB, std_tresh, still_wind)
-            #print(np.shape(signal))
-            # print(" BB : max : {}   , pos : {}".format(max_BB,w_ind_BB))
-            # print(" UH : max : {}   , pos : {}".format(max_UH,w_ind_UH))
-            if max_UH>0 or max_BB>0:
-                if max_UH>0:
-                    moy_UH = np.mean(signal[0,:w_ind_UH])
-                    std_UH = np.std(signal[0,:w_ind_UH])
-                    win_UH.append(win_UH)
-                    harm_amp_UH.append(temp[0,k,w_ind_UH])
-                if max_BB>0:
-                    moy_BB = np.mean(signal[1,:w_ind_BB])
-                    std_BB = np.std(signal[1,:w_ind_BB])
-                    win_BB.append(win_BB)
-                    harm_amp_BB.append(temp[0,k,w_ind_BB])
-                if max_UH>0 and max_BB>0:
-                    colo = 'black'
-                    both +=1
-                    amplit_rela_UH.append(max_UH)
-                    UH_abs.append(k)
-                    UH_abs_j.append(w_ind_BB)
-                    amplit_rela_BB.append(max_BB)
-                    BB_abs.append(k)
-                    BB_abs_j.append(w_ind_BB)
-                    
-                elif max_BB>0:
-                    colo = 'r'
-                    bb +=1
-                    amplit_rela_BB.append(max_BB)
-                    BB_abs.append(k)
-                    BB_abs_j.append(w_ind_BB)
-                
-                else :
-                    colo =  'g'
-                    uh +=1
-                    amplit_rela_UH.append(max_UH)
-                    UH_abs.append(k)
-                    UH_abs_j.append(w_ind_UH)
-                    
-                    
-                # moy = np.mean(signal[0,:j],axis=1)
-                # std = np.std(signal[:,:j],axis=1)
-                # if signal[0,j]>moy[0]+std_tresh*std[0] or signal[1,j]>moy[1]+std_tresh*std[1]:
-                #     resultat.append(j)
-                #     ratio_UH = (signal[0,j]-moy[0])/std[0]
-                #     ratio_BB = (signal[1,j]-moy[1])/std[1]
-                #     harm_amp.append(temp[0,k,j])
-                #     if signal[0,j]>moy[0]+std_tresh*std[0] and signal[1,j]>moy[1]+std_tresh*std[1]:
-                #         both +=1
-                #         amplit_rela_UH.append(ratio_UH)
-                #         UH_abs.append(k)
-                #         UH_abs_j.append(j)
-                #         amplit_rela_BB.append(ratio_BB)
-                #         BB_abs.append(k)
-                #         BB_abs_j.append(j)
-                        
-                #     elif signal[1,j]>moy[1]+std_tresh*std[1] : 
-                #         bb +=1
-                #         amplit_rela_BB.append(ratio_BB)
-                #         BB_abs.append(k)
-                #         BB_abs_j.append(j)
-                #     else :
-                #         uh +=1
-                #         amplit_rela_UH.append(ratio_UH)
-                #         UH_abs.append(k)
-                #         UH_abs_j.append(j)
-                if plot_true:
-                    for i in range(n_plot):
-                        plt.plot(pression,temp_norm[i,k,:], c=redblue[i],label=label[i])
-                    
-                    if max_UH>0:
-                        plt.plot([0,pression[-1]],[moy_UH+std_tresh*moy_UH,moy_UH+std_tresh*moy_UH],c=redblue[1])
-                        plt.plot([w_ind_UH,w_ind_UH],[0,1],c='g')
-                    if max_BB>0:
-                        plt.plot([0,pression[-1]],[moy_BB+std_tresh*std_BB,moy_BB+std_tresh*std_BB],c=redblue[2])
-                        plt.plot([w_ind_BB,w_ind_BB],[0,1],c='r')
-                    plt.legend(fontsize=20)
-                    plt.title("Différentes composantes, pulse {}".format(k),color="black",fontsize=22, fontweight = 'bold')
-                    plt.xlabel('Pression (kPa)',fontsize=20)
-                    plt.xlabel('Fenêtres temporelles',fontsize=20)
-                    #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
-                    # Ymax = 1.01*np.amax(plot[:,:,1])
-                    # Ymin = 0.99*np.amin(plot[:,:,2])
-                    plt.ylim([0, 1]) 
-                    #plt.ylim([0, np.max(temp_norm[:,k,:])])
-                    #plt.xlim([0, 40])    
-                    plt.grid(True)
-                    plt.tight_layout()
-                    plt.yscale('linear')
-                    plt.savefig(chemin_lin+nom+'_{}.png'.format(k),bbox_inches='tight')
-                    plt.clf()
-                    #break
-        plt.scatter(UH_abs,amplit_rela_UH,c='green',marker = "x",s=100, linewidths = 2)
-        plt.scatter(BB_abs,amplit_rela_BB,c='red',marker = "x",s=100, linewidths = 2)
-        plt.title("Différents événements dépassant le seuil de bruit (pulses)", color='black',fontsize=30, fontweight = 'bold')
-        plt.xlabel("Pulses",fontsize=20)
-        plt.ylabel("ratio de STD supérieur à la moyenne du bruit", color="blue",fontsize=20) 
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('linear')
-        plt.savefig(chemin_lin+"00"+nom+'recap_std_n_pulse.png',bbox_inches='tight')
-        plt.clf()
-        plt.scatter(UH_abs_j,amplit_rela_UH,c='green',marker = "x",s=100, linewidths = 2)
-        plt.scatter(BB_abs_j,amplit_rela_BB,c='red',marker = "x",s=100, linewidths = 2)
-        plt.title("Différents événements dépassant le seuil de bruit (windows)",color='black',fontsize=30, fontweight = 'bold')
-        plt.xlabel("Fenêtre de déclenchement dans le pulse",fontsize=20)
-        plt.ylabel("ratio de STD supérieur à la moyenne du bruit", color="blue",fontsize=20) 
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('linear')
-        plt.savefig(chemin_lin+"00"+nom+'recap_std_window.png',bbox_inches='tight')
-        plt.clf()
-        plt.plot(harm_amp_BB,c='darkviolet', label = 'Dépassement BB')
-        plt.plot(harm_amp_UH,c='darkcyan', label = 'Dépassement UH')
-        plt.legend()
-        plt.title("Valeurs des harmoniques au moment du depassement de seuil",color='black',fontsize=30, fontweight = 'bold')
-        plt.ylabel("Valeur non normalisée de la composante harmonique", color="blue",fontsize=20) 
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('linear')
-        plt.savefig(chemin_lin+"00"+nom+'harm_value.png',bbox_inches='tight')
-        plt.clf()
-        plt.scatter(UH_abs_j,UH_abs,c='green',marker = "x",s=100, linewidths = 2)
-        plt.scatter(BB_abs_j,BB_abs,c='red',marker = "x",s=100, linewidths = 2)
-        plt.title("Position des différents événements (dans le pulse et dans le traitement)",color='black',fontsize=30, fontweight = 'bold')
-        plt.xlabel("Fenêtre de déclenchement dans le pulse",fontsize=20)
-        plt.ylabel("Pulses de déclenchement", color="blue",fontsize=20) 
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('linear')
-        plt.savefig(chemin_lin+"00"+nom+'recap_pulse_window.png',bbox_inches='tight')
-        plt.close("all") 
-        fig=plt.figure(figsize=(20,11))
-        plt.subplot(1,2,1)
-        plt.scatter(['UH' for j in amplit_rela_UH],amplit_rela_UH,c='green',marker = "o",s=100, linewidths = 2, alpha=0.15)
-        plt.scatter(['BB' for j in amplit_rela_BB],amplit_rela_BB,c='red',marker = "o",s=100, linewidths = 2, alpha=0.15)
-        plt.title("Différents événements durant le pulse (Linear)",color='black',fontsize=30, fontweight = 'bold')
-        plt.xlabel("Valeur de ration de STD",fontsize=20)
-        plt.ylabel("Type de déclenchement", color="blue",fontsize=20) 
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('linear')
-        plt.subplot(1,2,1)
-        plt.scatter(['UH' for j in amplit_rela_UH],amplit_rela_UH,c='green',marker = "o",s=100, linewidths = 2, alpha=0.15)
-        plt.scatter(['BB' for j in amplit_rela_BB],amplit_rela_BB,c='red',marker = "o",s=100, linewidths = 2, alpha=0.15)
-        plt.title("Différents événements durant le pulse (LOG)",color='black',fontsize=30, fontweight = 'bold')
-        plt.xlabel("Valeur de ration de STD",fontsize=20)
-        plt.ylabel("Type de déclenchement", color="blue",fontsize=20) 
-        plt.grid(True)
-        plt.tight_layout()
-        plt.yscale('log')
-        plt.savefig(chemin_lin+"00"+nom+'recap_pulse_ratio.png',bbox_inches='tight')
-        plt.close("all")     
-        print("déclenchement : UH {}, BB {}, UH&BB {}".format(uh,bb,both)) ,
-        if len(amplit_rela_UH)>0:
-            print("UH ratio de valeur de déclenchement : {} +- ".format(np.round(np.mean(amplit_rela_UH),decimals=2)),np.round(np.std(amplit_rela_UH),decimals=2))
-        if len(amplit_rela_BB)>0:
-            print("BB ratio de valeur de déclenchement : {} +- ".format(np.round(np.mean(amplit_rela_BB),decimals=2)),np.round(np.std(amplit_rela_BB),decimals=2))
-        print("fenêtre de déclenchement moyen UH : {}".format(np.mean(UH_abs_j)))
-        print("fenêtre de déclenchement median UH : {}".format(np.median(UH_abs_j))) 
-        print("fenêtre de déclenchement moyen BB : {}".format(np.mean(BB_abs_j)))
-        print("fenêtre de déclenchement median BB : {}".format(np.median(BB_abs_j)))
-            
+        plt.savefig(chemin_lin+nom+'_ramp.png',bbox_inches='tight')           
+        plt.close("all")  
         
     def plot_indice_windowed(self,chemin,mapval,bits):
 # =============================================================================
@@ -1126,7 +833,7 @@ class experiment():
             plot[0,i] = 20*np.log10(np.mean(pulse.indice_harm_w, axis = 0))
             plot[1,i] = 20*np.log10(np.mean(pulse.indice_Uharm_w, axis = 0 ))
             plot[2,i] = 20*np.log10(pulse.indice_BB_w)
-        plot_legend=["Harmoniques","Ultra-harmoniques","Broaband"]
+        plot_legend=["Harmoniques","Ultra-harmoniques","Bruit large bande"]
         print("min : {}".format(np.min(plot[1])))
         print("max : {}".format(np.max(plot[1])))
         redblue=['b','g','r']
@@ -1154,18 +861,13 @@ class experiment():
         plt.savefig(chemin,bbox_inches='tight')
         plt.close("all")
         return [np.min(plot[0,:]),np.max(plot[0,:]),np.min(plot[1,:]),np.max(plot[1,:]),np.min(plot[2,:]),np.max(plot[2,:])]
-    
-    
-    def recup_harm(self,n):
-        temp =self.pulses[n].indice_harm_w[:]#1:-1
-        return temp
-    
-    
+        
     def plot_indice_component(self,chemin,nbit,fit,n=1):
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         ##HARMONIQUES
         n_plot = 4
+        n_BB = self.num_BB
         n_harm=self.n_harm+1
         plot = np.zeros((n_plot,self.n_pulse//n,n_harm,3))
         temp = np.zeros((n_plot,n,n_harm))
@@ -1173,21 +875,21 @@ class experiment():
             temp[1] =[self.pulses[i*n+a].indice_harm for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
             temp[2] =[self.pulses[i*n+a].indice_Uharm for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
             temp[3] =[self.pulses[i*n+a].indice_Uharm_norm_div for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+s
-            temp[0,:,0] =[self.pulses[i*n+a].indice_BB for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
-            for k in range(1,n_plot):
+            temp[0] =[self.pulses[i*n+a].indice_BB_sliced for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
+            for k in range(0,n_plot):
                 for j in range(n_harm):
                     plot[k,i,j,0]=np.mean(temp[k,:,j])
                     plot[k,i,j,1]=plot[k,i,j,0]+np.std(temp[k,:,j])
                     plot[k,i,j,2]=plot[k,i,j,0]-np.std(temp[k,:,j])
-            plot[0,i,0,0]=np.mean(temp[0,:,0])
-            plot[0,i,0,1]=plot[0,i,0,0]+np.std(temp[0,:,0])
-            plot[0,i,0,2]=plot[0,i,0,0]-np.std(temp[0,:,0])
-        plot_legend=["Indices représentant le bruit de bande","Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant les ultra-harmoniques-BB","Indice representant 3UH-20BB","Indices représentant le fondamental & les harmoniques",]
-        legend=[["Broadband"],["error","2f0","3f0","4f0","5f0","6f0","7f0"],["f0/2","3f0/2","5f0/2","7f0/2","9f0/2","11f0/2"],["f0/2","3f0/2","5f0/2","7f0/2","9f0/2","11f0/2"],["f0","2f0","3f0","4f0","5f0","6f0","7f0"],["f0/2","3f0/2","5f0/2","7f0/2","9f0/2","11f0/2"]]
+            # plot[0,i,0,0]=np.mean(temp[0,:,0])
+            # plot[0,i,0,1]=plot[0,i,0,0]+np.std(temp[0,:,0])
+            # plot[0,i,0,2]=plot[0,i,0,0]-np.std(temp[0,:,0])
+        plot_legend=["Indices représentant le bruit large bande","Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant les ultra-harmoniques émergents","Indice representant 3UH-20BB","Indices représentant le fondamental & les harmoniques",]
+        legend=[["Bruit large bande {}".format(idbb+1) for idbb in range(n_BB)],["error","2f0","3f0","4f0","5f0","6f0","7f0"],["f0/2","3f0/2","5f0/2","7f0/2","9f0/2","11f0/2"],["f0/2","3f0/2","5f0/2","7f0/2","9f0/2","11f0/2"],["f0","2f0","3f0","4f0","5f0","6f0","7f0"],["f0/2","3f0/2","5f0/2","7f0/2","9f0/2","11f0/2"]]
         colors=['black','red','peru','forestgreen','dodgerblue','indigo']
         amp=np.arange(nbit[0],nbit[1])
         pression=[fit[0]*j+fit[1] for j in amp]
-        long=[1,n_harm,n_harm,n_harm,n_harm]
+        long=[n_BB,n_harm,n_harm,n_harm,n_harm]
         redblue=['b','g','r','teal','m','black','black','black']
         # Stable cavitation dose
         fig=plt.figure(figsize=(20,11))
@@ -1200,8 +902,8 @@ class experiment():
             zomm_min = 50
             zoom_max = 800
             for j in range(long[i]):
-                if j==0 and i==1:
-                     continue
+                # if j==0 and i==1:
+                #      continue
                 plt.plot(pression,plot[i,:,j,0], c=colors[j],label=legend[i][j])
                 plt.fill_between(pression,plot[i,:,j,1],plot[i,:,j,2], color=colors[j],alpha=0.2)
                 
@@ -1214,11 +916,14 @@ class experiment():
                 if Ymin_zoom>0.99*np.amin(plot[i,p_to_b(fit,zomm_min):p_to_b(fit,zoom_max),j,2]):
                     Ymin_zoom = 0.99*np.amin(plot[i,p_to_b(fit,zomm_min):p_to_b(fit,zoom_max),j,2])
             plt.title(plot_legend[i],color=redblue[i],fontsize=30, fontweight = 'bold')
-            plt.xlabel('Pression KPa',fontsize=20)
-            plt.legend()
-            plt.ylabel(plot_legend[i]+' [a.u.]', color=redblue[i],fontsize=20, fontweight = 'bold')
+            plt.xlabel('Pression (kPa)',fontsize=25)
+            plt.legend(fontsize=24, loc = 'upper left')
+            plt.ylabel('Amplitude [a.u.]', color=redblue[i],fontsize=25)
             #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
 
+            plt.xticks(fontsize=20)
+            plt.yticks(fontsize=20)
+            plt.xlim([0, np.max(pression)])  
             plt.ylim([Ymin, Ymax])    
             plt.grid(True)
             plt.tight_layout()
@@ -1383,8 +1088,8 @@ class experiment_mult():
                 plt.plot(plot[i,j], c=colors[j],label=legend[j])
             plt.legend()
             plt.title(plot_legend[i],color=redblue[i],fontsize=30, fontweight = 'bold')
-            plt.xlabel('Pulses',fontsize=20)
-            plt.ylabel(plot_legend[i]+' [a.u.]', color=redblue[i],fontsize=20, fontweight = 'bold')
+            plt.xlabel('Pulses',fontsize=25)
+            plt.ylabel(plot_legend[i]+' [a.u.]', color=redblue[i],fontsize=25, fontweight = 'bold')
             if plot_legend[i]!="Ancienne SCD lineaire":
                 plt.yscale('log')
             #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
@@ -1394,15 +1099,33 @@ class experiment_mult():
             plt.grid(True)
             plt.tight_layout()
             plt.yscale('log')
+            plt.xticks(fontsize=20)
+            plt.yticks(fontsize=20)
             plt.savefig(chemin+'\\'+plot_legend[i]+'_log.png',bbox_inches='tight')
             plt.yscale('linear')
             plt.savefig(chemin+'\\'+plot_legend[i]+'_linear.png',bbox_inches='tight')
         plt.close("all")  
-           
+
+    def extract_composante(self,nbit,fit,legend = ['data '+str(int(i))for i in range(1,11)]):
+        ##creation des indices
+        n_plot = 3
+        n_harm_chosen = 3
+        plot=np.zeros((self.n_exp,self.exp[0].n_pulse,n_plot,self.exp[0].pulses[0].n_window,n_harm_chosen))
+        
+        for i in range(self.n_exp):
+            for j in range(self.exp[0].n_pulse):
+                plot[i,j,0,:] = np.transpose(20*np.log10(self.exp[i].pulses[j].indice_harm_w[1:n_harm_chosen+1]))
+                plot[i,j,1,:] = np.transpose(20*np.log10(self.exp[i].pulses[j].indice_Uharm_w[1:n_harm_chosen+1]))
+                plot[i,j,2,:] = np.transpose(20*np.log10(self.exp[i].pulses[j].indice_BB_sliced_w[1:n_harm_chosen+1]))
+        #je souhaiterai avant de renvoyer le resultat
+        #inverser les axes 2 et 3 pour plutot avoir dans plot : (exp, pulses, fenetres, indice, composantes) au lieu de (exp, pulses, indice, fenetres, composantes)
+        plot = np.swapaxes(plot,2,3)
+        return plot
+
     def plot_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)], ramp = False):
-        y_axis = 'Pressure (KPa)'
+        y_axis = 'Pression (kPa)'
         if ramp:
-            y_axis = 'Different pulses (ramping pressure)'
+            y_axis = 'Différents tirs'
             
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
@@ -1428,22 +1151,24 @@ class experiment_mult():
         amp=np.arange(nbit[0],(nbit[1]-1)*30+1)
         pression=[fit[0]*j+fit[1] for j in amp]
         self.n_window = self.exp[0].pulses[0].n_window
-        nom_str = ["\\H_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_norm_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\BB_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value)]
-        title_str = ["Composante harmonique","Composante ultra-harmonique","Composante ultra-harmonique émergente","Composante inertielle"]
+        nom_str = ["\\H_n{}_perLow{}_perHigh{}_ramp.png".format(n,mini_value,maxi_value),"\\UH_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_norm_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\BB_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value)]
+        title_str = ["Harmonic components","Ultra-harmonic components","Composante ultra-harmonique émergente","Inertial components"]
+        title_str = ["Indices harmoniques","Indices ultra-harmoniques","Indices ultra-harmoniques émergents","Indices inertiels"]
         for j in range(n_plot):
             plt.clf()
             fig, axes = plt.subplots(nrows=1, ncols=self.n_exp, figsize=(20,11))
-            fig.suptitle(title_str[j],fontsize=18, fontweight = 'bold',y=0.94)
+            fig.suptitle(title_str[j],fontsize=25, fontweight = 'bold',y=0.94)
             mini=np.percentile(plot[j],mini_value)
             maxi=np.percentile(plot[j],maxi_value)
             for i,ax in enumerate(axes.flat):
-                im = ax.imshow(plot[j,i,:,:],aspect='auto',interpolation='none',cmap='turbo',extent=[0,np.shape(plot[i])[1]*self.size_window/self.freq_ech*1000.,(nbit[1])*fit[0]+fit[1],(nbit[0])*fit[0]+fit[1]], vmin=mini,vmax=maxi)  #,extent=[0,pulse_time_ms,seq_time_s,0]   ,mapval  , vmin=mapval[i*2],vmax=mapval[i*2+1]
+                im = ax.imshow(plot[j,i,:,:],aspect='auto',interpolation='none',cmap='turbo',extent=[0,1*np.shape(plot[i])[1]*self.size_decal/self.freq_ech*1000.,((nbit[1])*fit[0]+fit[1]),((nbit[0])*fit[0]+fit[1])], vmin=mini,vmax=maxi)  #,extent=[0,pulse_time_ms,seq_time_s,0]   ,mapval  , vmin=mapval[i*2],vmax=mapval[i*2+1]
                 ax.title.set_text(legend[i].upper())
                 ax.title.set_fontweight('bold')
-                ax.set_xlabel('Intra-Pulse Time'.upper()+' (ms)')
+                ax.title.set_fontsize(18)
+                ax.set_xlabel('Temps'.upper()+' (ms)',fontsize=20)
                 if i==0:
-                    ax.set_ylabel(y_axis)
-            
+                    ax.set_ylabel(y_axis,fontsize=30)
+                ax.tick_params(axis = 'both',which = 'both',  labelsize=16)
             fig.colorbar(im,ax=axes.ravel().tolist())
             #plt.savefig(chemin+"\\bulles_H{}_fonda.png".format(k),bbox_inches='tight')
             plt.savefig(chemin+nom_str[j],bbox_inches='tight')
@@ -1485,7 +1210,7 @@ class experiment_mult():
         pression=[fit[0]*j+fit[1] for j in amp]
         self.n_window = self.exp[0].pulses[0].n_window
         nom_str = ["\\H_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\UH_norm_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value),"\\BB_n{}_perLow{}_perHigh{}.png".format(n,mini_value,maxi_value)]
-        title_str = ["Composante harmonique","Composante ultra-harmonique","Composante ultra-harmonique émergente","Composante inertielle"]
+        title_str = ["Harmonic components","Ultra-harmonic components","Composante ultra-harmonique émergente","Inertial components"]
         for j in range(n_plot):
             plt.clf()
             fig, axes = plt.subplots(nrows=1, ncols=self.n_exp, figsize=(20,11))
@@ -1691,7 +1416,7 @@ class experiment_mult():
             temp = np.zeros((2,n_plot,n))
             temp_bis = np.zeros((2,n_plot,n,nf))
             for j in range(self.exp[0].n_pulse//n):
-                temp[0,0] =[np.mean(self.exp[i].pulses[j*n+a].indice_harm[1:-1]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
+                temp[0,0] =[np.mean(self.exp[i].pulses[j*n+a].indice_harm[1:3]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
                 temp[0,1] =[np.mean(self.exp[i].pulses[j*n+a].indice_Uharm[1:4]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
                 temp[0,2] =[np.mean(self.exp[i].pulses[j*n+a].indice_BB) for a in range(n)] #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
                 temp[0,3] =[np.mean(self.exp[i].pulses[j*n+a].indice_Uharm_norm_div[1:4]) for a in range(n)]#np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
@@ -1700,10 +1425,26 @@ class experiment_mult():
                     plot[k,i,j,0]=np.mean(temp[0,k])
                     plot[k,i,j,1]=plot[k,i,j,0]+np.std(temp[0,k])
                     plot[k,i,j,2]=plot[k,i,j,0]-np.std(temp[0,k])
-                
-        plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit de bande","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(beta),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
+                    
+        plot_legend=["Harmonic indexes","Ultraharmonic indexes","Broadband noise indexes","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(beta),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
+        plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques émergents","Indice representant UH-{}BB".format(beta),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
         nom_img=["harm","U_harm","BB","U_harm_norm","UH_BB","ratio_"+nom+"_all","ratio_"+nom+"_start","ratio_"+nom+"_end"]
         colors=['black','red','peru','forestgreen','dodgerblue','gold']
+        colors=['blue','green','red','forestgreen','dodgerblue','gold']
+        colors_harm = ['black', 'mediumturquoise', 'dodgerblue','navy']
+        colors_Uharm = ['black', 'olivedrab', 'limegreen','darkgreen']
+        colors_BB = ['black', 'lightcoral', 'red','darkred']
+        colors_grad = []
+        for j in range(n_plot):
+            colors_grad.append([])
+            for k in range(self.n_exp):
+                if k ==0 :
+                    colors_grad[j].append('black')
+                else :
+                    colors_grad[j].append(colors[j])
+        colors_grad[0] = colors_harm
+        colors_grad[1] = colors_Uharm
+        colors_grad[2] = colors_BB
         line= ['-','-','-','-','-','--','-']
         #fit = np.array([4.66745471*2, 5.80567673])
         if fit==False : 
@@ -1718,12 +1459,10 @@ class experiment_mult():
         for i in range(n_plot):
             fig.clf()
             for j in range(self.n_exp):
-                plt.plot(pression,plot[i,j,:,0], c=colors[j],label=legend[j])
-                plt.fill_between(pression,plot[i,j,:,1],plot[i,j,:,2], color=colors[j],alpha=0.2)
-            plt.legend(fontsize=20)
+                plt.plot(pression,plot[i,j,:,0], c=colors_grad[i][j],label=legend[j],alpha=1)
+                plt.fill_between(pression,plot[i,j,:,1],plot[i,j,:,2], color=colors_grad[i][j],alpha=0.20)
+            plt.legend(fontsize=24, loc = 'upper left')
             plt.title(plot_legend[i],color=redblue[i],fontsize=30, fontweight = 'bold')
-            plt.xlabel('Pression (KPa)',fontsize=20)
-            plt.ylabel('Magnitude [a.u.]', color=redblue[i],fontsize=20)
             #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
             Ymax = 1.01*np.amax(plot[i,:,:,1])
             Ymin = 0.99*np.amin(plot[i,:,:,2])
@@ -1731,9 +1470,14 @@ class experiment_mult():
             zoom_max = 900
             Ymax_zoom = 1.01*np.amax(plot[i,:,p_to_b(fit,zomm_min):p_to_b(fit,zoom_max),1])
             Ymin_zoom = 0.99*np.amin(plot[i,:,p_to_b(fit,zomm_min):p_to_b(fit,zoom_max),2])
-            plt.ylim([Ymin, Ymax])    
+            #plt.ylim([Ymin_zoom, Ymax_zoom])        
             plt.grid(True)
             plt.tight_layout()
+            plt.xticks(fontsize=20)
+            plt.yticks(fontsize=20)
+            plt.xlim([0, np.max(pression)]) 
+            plt.xlabel('Pression (kPa)',fontsize=25)
+            plt.ylabel('Amplitude [a.u.]', color=redblue[i],fontsize=25)
             plt.yscale('linear')
             plt.savefig(chemin_lin+nom_img[i]+'_linear.png',bbox_inches='tight')
             plt.xlim([zomm_min, zoom_max])
@@ -1741,7 +1485,7 @@ class experiment_mult():
             plt.savefig(chemin_lin+nom_img[i]+'_linear_ZOOM.png',bbox_inches='tight')            
         plt.close("all")  
 
-    def plot_indice_RAMP(self,nom,chemin,pression,legend = ['data '+str(int(i))for i in range(1,11)]):
+    def plot_indice_RAMP(self,nom,title,chemin,pression,legend = ['data '+str(int(i))for i in range(1,11)]):
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
         chemin_lin=chemin
@@ -1762,9 +1506,24 @@ class experiment_mult():
                 plot[k,i,:,1]=plot[k,i,:,0]+np.std(temp[k], axis=0)
                 plot[k,i,:,2]=plot[k,i,:,0]-np.std(temp[k], axis=0)
                 
-        plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(5),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
+        plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques émergents","Indice representant UH-{}BB".format(5),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
         nom_img=["harm","U_harm","BB","U_harm_norm","UH_BB","ratio_"+nom+"_all","ratio_"+nom+"_start","ratio_"+nom+"_end"]
-        colors=['black','red','peru','forestgreen','dodgerblue','gold']
+        colors=['blue','green','red','forestgreen','dodgerblue','gold']
+        colors_harm = ['black', 'mediumturquoise', 'dodgerblue','navy']
+        colors_Uharm = ['black', 'olivedrab', 'limegreen','darkgreen']
+        colors_BB = ['black', 'lightcoral', 'red','darkred']
+        colors_grad = []
+        for j in range(n_plot):
+            colors_grad.append([])
+            for k in range(self.n_exp):
+                if k ==0 :
+                    colors_grad[j].append('black')
+                else :
+                    colors_grad[j].append(colors[j])
+        colors_grad[0] = colors_harm
+        colors_grad[1] = colors_Uharm
+        colors_grad[2] = colors_BB
+        colors_grad[3] = colors_Uharm
         line= ['-','-','-','-','-','--','-']
         #fit = np.array([4.66745471*2, 5.80567673])
         redblue=['b','g','r','teal','m','black','black','black']
@@ -1773,20 +1532,23 @@ class experiment_mult():
         for i in range(n_plot):
             fig.clf()
             for j in range(self.n_exp):
-                plt.plot(pression,plot[i,j,:,0], c=colors[j],label=legend[j])
-                plt.fill_between(pression,plot[i,j,:,1],plot[i,j,:,2], color=colors[j],alpha=0.2)
-            plt.legend(fontsize=20)
+                plt.plot(pression,plot[i,j,:,0], c=colors_grad[i][j],label=title[j])
+                plt.fill_between(pression,plot[i,j,:,1],plot[i,j,:,2], color=colors_grad[i][j],alpha=0.2)
+            plt.legend(fontsize=24, loc = 'upper left')
             plt.title(plot_legend[i],color=redblue[i],fontsize=30, fontweight = 'bold')
-            plt.xlabel('Pression (KPa)',fontsize=20)
-            plt.ylabel('Magnitude [a.u.]', color=redblue[i],fontsize=20)
+            plt.xlabel('Pression (kPa)',fontsize=25)
+            plt.ylabel('Amplitude [a.u.]', color=redblue[i],fontsize=25)
             #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
             Ymax = 1.01*np.amax(plot[i,:,:,1])
             Ymin = 0.99*np.amin(plot[i,:,:,2])
-            plt.ylim([Ymin, Ymax])    
+            plt.ylim([Ymin, Ymax])         
             plt.grid(True)
             plt.tight_layout()
+            plt.xticks(fontsize=20)
+            plt.yticks(fontsize=20)
+            plt.xlim([0, np.max(pression)]) 
             plt.yscale('linear')
-            plt.savefig(chemin_lin+nom_img[i]+'_linear.png',bbox_inches='tight')           
+            plt.savefig(chemin_lin+nom_img[i]+'_linear_ramp.png',bbox_inches='tight')           
         plt.close("all")  
 
     def plot_ratio_bulles_map(self,harm_num,harm_den,nom,nbit,n=1,legend = ['data '+str(int(i))for i in range(1,11)],):

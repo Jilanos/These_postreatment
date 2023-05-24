@@ -30,6 +30,7 @@ tra5 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\
 tra6 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\20221109_PCDsig_BBB_NHP\\"
 tra7 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\20221109_PCDsig_BBB_NHP\\old\\"
 tra8 = "D:\\data_vivo\\20230210_PCDsig_NHP_BB8846_pente\\"
+tra9 = "D:\\data_vivo\\20230310__NHP_BY824\\"
 
 name = ["Mircen_juin_21 ouverture d'après fiche manip", "Mircen_juin_22 Ouverture profonde + trajet", "Mircen_fev + belle ouverture", 
         "NS 30/11/22 bis converge 25bits", "NS 30/11/22 bis forcé 70bits", "NS 30/11/22 converge 16bits", "NS 30/11/22 converge 22bits", 
@@ -46,8 +47,10 @@ start_i = [0] + [ 10615 for i in range(10)]
 end_i = [312500] + [ 248490 for i in range(10)]
 fe_i =  [2*15.625e6] + [ 25000000 for i in range(10)]
 factor =  [1] + [ 1 for i in range(10)]
+
+
 #%%
-for ind, tra in enumerate([ tra00, tra000, tra0, tra1, tra2, tra3, tra4, tra5, tra6, tra7, tra8]):#
+for ind, tra in enumerate([ tra9]):#tra00, tra000, tra0, tra1, tra2, tra3, tra4, tra5, tra6, tra7, tra8
         
     
 
@@ -110,7 +113,8 @@ for ind, tra in enumerate([ tra00, tra000, tra0, tra1, tra2, tra3, tra4, tra5, t
     np.save(tra + 'event_BB_pente_log.npy',np.array(events_pente_log)  )
     print(len(events_pente), " events")
 
-#%%    
+#%%  
+  
 nom = ["image_log", "image_lin"]
 plt.figure(figsize = (20,11))
 for itera, allev in enumerate([all_event_log]):
@@ -134,7 +138,114 @@ for itera, allev in enumerate([all_event_log]):
     plt.grid(True)
     plt.tight_layout()
     plt.yscale('linear')
-    plt.savefig("C:\\Users\\PM263553\\Desktop\\muscles_monkey\\More_exp" + nom[itera] +".png",bbox_inches='tight')    
+    plt.savefig("C:\\Users\\PM263553\\Desktop\\muscles_monkey\\ouplayop" + nom[itera] +".png",bbox_inches='tight')    
+    
+plt.close("all")
+sys.exit()
+
+
+
+
+
+
+print("data loaded! \n\nadding pulses....")
+
+exp_vivo.add_pulses(data, spacer =30e3)
+print("pulses added!! ")
+
+
+
+#%%
+tra9 = "D:\\data_vivo\\20230310__NHP_BY824\\"
+
+name = ["Mircen_session_25"]
+seuil = [1.5]
+
+
+all_event_log = []
+all_event = []
+start_i = [ 10615 for i in range(10)]
+end_i = [ 248490 for i in range(10)]
+fe_i =   [ 25000000 for i in range(10)]
+factor =  [ 1 for i in range(10)]
+
+for ind, tra in enumerate([tra9]):#tra00, tra000, tra0, tra1, tra2, tra3, tra4, tra5, tra6, tra7, tra8
+
+    start,end = start_i[ind],end_i[ind]
+    fe = fe_i[ind]
+    average = 5
+    exp_vivo=experiment(fe,500000,start=start,end=end)
+    
+    
+    
+    print("\nloading data.... " + name[ind])
+    dossier=tra + "Bubbles.npy"
+    dossier_base=tra + "Control.npy"
+    data_bbb = np.load(dossier)
+    data_base = np.load(dossier_base)
+    amp = np.load(tra + "amplitude_history.npy")
+    n_pulses = len(amp)
+    data_bbb = np.transpose(data_bbb)[:len(amp)]
+    data_base = np.transpose(data_base)
+    
+    print("\nCreating inertial baselin index")
+    inertial_dose = []
+    for j in range((len(data_base)-1)//average):
+        exp_vivo=experiment(fe,500000,start=start,end=end)
+        exp_vivo.add_pulses(data_base[j*average:(j+1)*average], spacer =30e3)
+        ic = [puls.indice_BB for puls in exp_vivo.pulses]
+        inertial_dose.append(np.mean(ic))
+    print("Done")
+        
+    
+    print("\nCreating inertial BBB list")
+    inertial_bbb_raw = []
+    inertial_bbb_norm = []
+    events_pente = []
+    events_pente_log = []
+    for j in range(len(amp)):
+        exp_vivo=experiment(fe,500000,start=start,end=end)
+        exp_vivo.add_pulse(data_bbb[j], spacer =30e3)
+        inertial_bbb_raw.append(exp_vivo.pulses[0].indice_BB)
+        inertial_bbb_norm.append((inertial_bbb_raw[-1]/inertial_dose[int(amp[j])-1])*factor[ind])
+        if inertial_bbb_norm[-1]>more_events(seuil[ind]) :
+            arr = exp_vivo.pulses[0].indice_BB_sliced
+            a,b = np.polyfit([i for i in range(len(arr))], arr,1)
+            events_pente.append([inertial_bbb_norm[-1],a])
+            arr = np.log10(arr)
+            a,b = np.polyfit([i for i in range(len(arr))], arr,1)
+            events_pente_log.append([inertial_bbb_norm[-1],a])
+    all_event.append(events_pente)
+    all_event_log.append(events_pente_log)
+    np.save(tra + 'event_BB_pente_log.npy',np.array(events_pente_log)  )
+    print(len(events_pente), " events")
+
+#%%  
+  
+nom = ["image_log", "image_lin"]
+plt.figure(figsize = (20,11))
+for itera, allev in enumerate([all_event_log]):
+    plt.clf()
+    color = ['c', 'navy', 'blue', 'forestgreen', 'lime', 'purple', 'magenta', 'dimgrey', 'crimson', 'tomato', 'darkorchid']
+    style = ['8', 'v', 'o', 'D', 's', 'p', 'x', '^' , '>', '<', 'o']
+
+    for i, exp in enumerate(allev):
+        for j, even in enumerate(exp) :
+            if j==0:
+                plt.scatter(even[0],even[1], c = color[i], marker=style[i], label = name[i])
+            else :
+                plt.scatter(even[0],even[1], c = color[i], marker=style[i])
+    plt.plot([1,1],[-0.22, 0.09],c = 'black', label = 'Baseline')       
+    plt.plot([1.5,1.5],[-0.22, 0.09],c = 'red')            
+    plt.plot([1,18],[-0.05, -0.05],c = 'sienna', label = "Limite de pente à implémenter")        
+    plt.legend(fontsize=17)
+    plt.title("Différents événements des exp à Mircen et NS",fontsize=30, fontweight = 'bold')
+    plt.xlabel('Valeurs icd de l event (normalisée)',fontsize=20)
+    plt.ylabel('Pente du BB',fontsize=20)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.yscale('linear')
+    plt.savefig("C:\\Users\\PM263553\\Desktop\\muscles_monkey\\session25" + nom[itera] +".png",bbox_inches='tight')    
     
 plt.close("all")
 sys.exit()
@@ -159,14 +270,7 @@ print("pulses added!! ")
 
 
 
-
-
-
-
-
-
-
-
+#%%
 
 
 
@@ -181,7 +285,7 @@ sys.exit()
 
 
 
-for tra in [tra1, tra2]: #, tra3, tra4
+for tra in [tra9]: #, tra3, tra4
     traj= tra + "Post_treatment_same\\"
     
     
