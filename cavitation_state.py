@@ -15,11 +15,12 @@ import gc
 
 gc.collect(generation=2)
 
-pc_fixe = False
+pc_fixe = True
 if pc_fixe:
-    tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
-    traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\map_sklearn\\'
+    tra = 'D:\\code_UH_long\\GENE_MOD\\iter_13\\'
+    traj='C:\\Users\\MIDAS\\Desktop\\resultats_labelling\\iter_13\\'
     doss=["PULSE_0_75","PULSE_240_75","PULSE_80_75","PULSE_27_75"]
+    doss=["bubbles_0_75","bubbles_240_75","bubbles_80_75","bubbles_27_75"] 
     legend=["Eau","Dilution 1:240","Dilution 1:80","Dilution 1:27"]
     nexp=4
     rep = 20
@@ -116,11 +117,8 @@ def carte_cluster(data,chemin, titre,legend):
 #on veut maintenant appliquer un algo de labelisation sur les points de la carte
 #on va utiliser kmeans, dbscan ou gmm
 for n_clusters in [2,3,4,5,6,7,8,9,10]:
-    kmeans = KMeans(n_clusters=n_clusters, n_init='auto').fit(X)
+    kmeans = KMeans(n_clusters=n_clusters, n_init=10).fit(X)
     y_kmeans = kmeans.predict(X)
-
-    dbscan = DBSCAN(eps=(n_clusters-1)/10.).fit(X)
-    y_dbscan = dbscan.fit_predict(X)
 
     gmm = sklearn.mixture.GaussianMixture(n_components=n_clusters).fit(X)
     y_gmm = gmm.predict(X)
@@ -128,7 +126,6 @@ for n_clusters in [2,3,4,5,6,7,8,9,10]:
     # on va maintenant regarder le pourcentage de points de chaque cluster 
 
     pourcentage_kmeans = [np.count_nonzero(y_kmeans == i) for i in range(np.max(y_kmeans)+1)]
-    pourcentage_dbscan = [np.count_nonzero(y_dbscan == i) for i in range(np.max(y_dbscan)+1)]
     pourcentage_gmm = [np.count_nonzero(y_gmm == i) for i in range(np.max(y_gmm)+1)]
 
     # plt.figure()
@@ -148,12 +145,10 @@ for n_clusters in [2,3,4,5,6,7,8,9,10]:
     #on va d'abord reshape no Y :
     shape = np.shape(y_kmeans)
     y_kmeans_reshape = np.reshape(y_kmeans,(n_exp,n_pulse,n_fen))
-    y_dbscan_reshape = np.reshape(y_dbscan,(n_exp,n_pulse,n_fen))
     y_gmm_reshape = np.reshape(y_gmm,(n_exp,n_pulse,n_fen))
 
     #on va maintenant créer les cartes au travers d'une fonction
     carte_cluster(y_kmeans_reshape,traj,"kmeans_{}_clusters".format(n_clusters),legend)
-    carte_cluster(y_dbscan_reshape,traj,"dbscan_{}_clusters".format(n_clusters),legend)
     carte_cluster(y_gmm_reshape,traj,"gmm_{}_clusters".format(n_clusters),legend)
 
     # on va controler en refaisant apparaitre la carte de la composante inertielle
