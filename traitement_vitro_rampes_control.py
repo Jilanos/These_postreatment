@@ -32,25 +32,24 @@ tra7 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\
 tra8 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s5\\"
 
 
-tra4 = "D:\\data_vivo\\20230322__mouse_574\\"
-tra44 = "D:\\data_vivo\\20230322__mouse_575\\"
+tra4 = "F:\\20230601__603\\"
+tra44 = "F:\\20230601__604\\"
 tra444 = "D:\\data_vivo\\20230322__mouse_588\\"
 
 
-trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\analyse_manip_15fev23\\Analyse_mouse_F0_2203\\"
+trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\analyse_manip_01jun23\\"
 path(trajet)
 
 
 legend = ["mouse_564_65"]
 legend = ["Paul Control bulles 07_02", "Corentin bulles baseline", "Paul eau ampli", "Paul eau sans ampli", "rat_463_36", "rat_445_75"]
 
-legend = ["xp 3 mouse 574","xp 3 mouse 575","xp 3 mouse 588"]
+legend = ["xp 4 mouse 603","xp 4 mouse 604","xp 3 mouse 588"]
 
 
 #VIVO_Mouse587_221122_45
-for i, tra in enumerate([tra4,tra44,tra444]): #, tra1[tra0, tra1, tra2, tra3]
-    if i <2:
-        continue
+for i, tra in enumerate([tra4,tra44]): #, tra1[tra0, tra1, tra2, tra3]
+
     traj = trajet + legend[i]+ "\\"
     path(traj)
     # traj = tra + "Analyse_trueharm\\"
@@ -72,7 +71,7 @@ for i, tra in enumerate([tra4,tra44,tra444]): #, tra1[tra0, tra1, tra2, tra3]
     
     print("\nLoading pulses......")
     data_raw = np.load(tra+'\\Bubbles.npy') #Bubbles #Control
-    data = data_true(np.transpose(data_raw))
+    data = (np.transpose(data_raw[:,:1104]))
     #sys.exit()
     print("Loading done!")
     test_exp=experiment(25000000,1500000,start=start,end=end, size_decal = 1271)#1271
@@ -83,7 +82,7 @@ for i, tra in enumerate([tra4,tra44,tra444]): #, tra1[tra0, tra1, tra2, tra3]
 
     print("\nPLot des différents indices")
     print(legend[i])
-    test_exp.plot_indice_RAMP("treatment",traj,x_press, vivo= True, all_plot= True)
+    test_exp.plot_indice_RAMP("treatment",legend[i],traj,x_press)
     # for std in range(5,10,2):
     #         print("STD = ", std)
     #         test_exp.plot_indice_RAMP_std(legend[i],traj+"MOY_std_{}\\".format(std),still_wind = 40, std_tresh = std, true_harm = False, plot_true = True)
@@ -95,9 +94,9 @@ for i, tra in enumerate([tra4,tra44,tra444]): #, tra1[tra0, tra1, tra2, tra3]
     test_exp.plot_windowed(traj,nbit,fit,20,99,1,legend, ramp = True)
     test_exp.plot_windowed(traj,nbit,fit,40,100,1,legend, ramp = True)
     
-    for j in range(0,n_pulse,5):
-        #print(j)
-        test_exp.pulses[j].plot(traji+"spec_{}".format(j))
+    # for j in range(0,n_pulse,25):
+    #     print(j)
+    #     test_exp.pulses[j].plot(traji+"spec_{}".format(j))
         
     
 sys.exit()
