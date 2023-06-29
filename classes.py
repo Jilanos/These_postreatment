@@ -13,6 +13,30 @@ from scipy import signal
 plt.close("all")
 
 
+def sortir_bruit(signal, seuil_min, debut_detec):
+    n = len(signal)
+    res = np.zeros((n))
+    for j in range(debut_detec, n):
+        moy = np.mean(signal[:j])
+        std = np.std(signal[:j])
+        depassement = (signal[j]-moy)/std
+        if depassement >= seuil_min:
+            res[j] = depassement
+    maxi, maxi_ind = max_pos(res)
+    return maxi, maxi_ind
+
+     
+def max_pos(array):
+    n=len(array)
+    maxi,Imaxi = array[0],0
+    for i in range(n):
+        elt = array[i]
+        if elt>maxi:
+            maxi,Imaxi=elt,i
+    return maxi,Imaxi 
+
+
+
 def gradation(n):
     if n==0 :
         return 0
@@ -509,7 +533,6 @@ class experiment():
             self.pulses.append(pulse)
             self.n_pulse+=1
     
-    
     def plot_windowed(self,chemin,nbit,fit,mini_value=0,maxi_value=100,n=1,legend = ['data '+str(int(i))for i in range(1,11)], ramp = False):
         y_axis = 'Pressure (KPa)'
         if ramp:
@@ -764,7 +787,6 @@ class experiment():
         plt.savefig(chemin+nom+'.png',bbox_inches='tight') 
         plt.close("all")    
         
-        
     def plot_indice_RAMP(self,nom,title,chemin,pression):
         if not os.path.isdir(chemin): # check if folder exists, otherwise create it
             os.mkdir(chemin)
@@ -1012,7 +1034,254 @@ class experiment():
         #     plt.yscale('log')
         #     plt.savefig(chemin_log+plot_legend[i_bis]+'_log_ZOOM.png',bbox_inches='tight')
         # plt.close("all")
+           
+    def plot_indice_RAMP_std(self,nom,chemin,still_wind = 10, std_tresh = 3, true_harm = False, plot_true =True):
+        if not os.path.isdir(chemin): # check if folder exists, otherwise create it
+            os.mkdir(chemin)
+        pression = [i for i in range(self.pulses[0].n_window)]
+        chemin_lin=chemin
+        n_window = self.pulses[0].n_window
+        ##HARMONIQUES
+        n_plot = 3
+        plot_raw=np.zeros((n_plot,n_window,3))
+        plot=np.zeros((n_plot,n_window,3))
+        temp = np.zeros((n_plot,self.n_pulse,n_window))
+        temp_norm = np.zeros((n_plot,self.n_pulse,n_window))
+        for j in range(self.n_pulse):
+            #temp[0,j] =np.mean(self.pulses[j].indice_harm_w[1:-1],axis=0)#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
+            temp[0,j] =self.pulses[j].fondamental_w#np.mean(self.exp[i].pulses[j*n+a].indice_harm[1])+
+            temp[1,j] =np.mean(self.pulses[j].indice_Uharm_norm_div_w[1:4],axis=0) #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,1:3])+
+            temp[2,j] =self.pulses[j].indice_BB_w  #np.mean(self.exp[i].pulses[j*n+a].indice_harm_w[1,9:11])+
             
+        for k in range(n_plot):
+            plot_raw[k,:,0]=np.mean(temp[k], axis=0)
+            plot_raw[k,:,1]=plot_raw[k,:,0]+np.std(temp[k], axis=0)
+            plot_raw[k,:,2]=plot_raw[k,:,0]-np.std(temp[k], axis=0)
+        for k in range(n_plot):
+            plot[k]=plot_raw[k]-np.min(plot_raw[k,:,0])
+        for k in range(n_plot):
+            plot[k]=plot[k]/np.max(plot[k,:,0])
+        
+
+        for k in range(n_plot):
+            for j in range(self.n_pulse):
+                temp_norm[k,j]=temp[k,j]-np.min(temp[k,j])
+                
+                
+        if true_harm :
+            maxima = np.max(temp_norm[0,:,:], axis = 1)
+            #print(np.shape(maxima))
+        else :
+            maxima = np.ones((self.n_pulse))
+            #(np.shape(maxima))
+        
+        for k in range(n_plot):
+            for j in range(self.n_pulse):
+                temp_norm[k,j]=temp_norm[k,j]/np.max(temp_norm[k,j]) * maxima[j]
+            
+            
+        plot_legend=["Indices représentant les harmoniques","Indices représentant les ultra-harmoniques","Indices représentant le bruit large bande","Indices représentant les ultra-harmoniques-BB","Indice representant UH-{}BB".format(7),"Indices représentant le ratio de bulles "+nom+" sur tout le pulse","Indices représentant le ratio de bulles "+nom+" en début de pulse","Indices représentant le ratio de bulles "+nom+" en fin de pulse"]
+        nom_img=["harm","U_harm","BB","U_harm_norm","UH_BB","ratio_"+nom+"_all","ratio_"+nom+"_start","ratio_"+nom+"_end"]
+        colors=['black','red','peru','forestgreen','dodgerblue','gold']
+        label = ["Fondamental", "Ultra-harmoniques", "Bruit large bande"]
+        redblue=['b','g','r','teal','m','black','black','black']
+        # Stable cavitation dose
+        fig=plt.figure(figsize=(20,11))
+        for i in range(n_plot):
+            plt.plot(pression,plot[i,:,0], c=redblue[i],label=label[i])
+            plt.fill_between(pression,plot[i,:,1],plot[i,:,2], color=redblue[i],alpha=0.2)
+        plt.legend(fontsize=20)
+        plt.title("Différentes composantes : "+nom,color="black",fontsize=22, fontweight = 'bold')
+        plt.xlabel('Fenêtres temporelles',fontsize=20)
+        plt.ylabel('Amplitude normalisée',fontsize=20)
+        #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
+        Ymax = 1.01*np.amax(plot[:,:,1])
+        Ymin = 0.99*np.amin(plot[:,:,2])
+        plt.ylim([-0.01, 1.01])    
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('linear')
+        plt.savefig(chemin_lin+'00'+nom+'.png',bbox_inches='tight')     
+        plt.clf()
+        uh,bb,both = 0, 0, 0
+        win_BB = []
+        win_UH = []
+        amplit_rela_UH = []
+        UH_abs = []
+        UH_abs_j = []
+        amplit_rela_BB = []
+        BB_abs = []
+        BB_abs_j = []
+        harm_amp_UH = []
+        harm_amp_BB = []
+        for k in range(self.n_pulse):#
+            signal =temp_norm[1:,k,:]
+            signal_UH = signal[0]
+            signal_BB = signal[1]
+            max_UH, w_ind_UH = sortir_bruit(signal_UH, std_tresh, still_wind)
+            max_BB, w_ind_BB = sortir_bruit(signal_BB, std_tresh, still_wind)
+            #print(np.shape(signal))
+            # print(" BB : max : {}   , pos : {}".format(max_BB,w_ind_BB))
+            # print(" UH : max : {}   , pos : {}".format(max_UH,w_ind_UH))
+            if max_UH>0 or max_BB>0:
+                if max_UH>0:
+                    moy_UH = np.mean(signal[0,:w_ind_UH])
+                    std_UH = np.std(signal[0,:w_ind_UH])
+                    win_UH.append(win_UH)
+                    harm_amp_UH.append(temp[0,k,w_ind_UH])
+                if max_BB>0:
+                    moy_BB = np.mean(signal[1,:w_ind_BB])
+                    std_BB = np.std(signal[1,:w_ind_BB])
+                    win_BB.append(win_BB)
+                    harm_amp_BB.append(temp[0,k,w_ind_BB])
+                if max_UH>0 and max_BB>0:
+                    colo = 'black'
+                    both +=1
+                    amplit_rela_UH.append(max_UH)
+                    UH_abs.append(k)
+                    UH_abs_j.append(w_ind_BB)
+                    amplit_rela_BB.append(max_BB)
+                    BB_abs.append(k)
+                    BB_abs_j.append(w_ind_BB)
+                    
+                elif max_BB>0:
+                    colo = 'r'
+                    bb +=1
+                    amplit_rela_BB.append(max_BB)
+                    BB_abs.append(k)
+                    BB_abs_j.append(w_ind_BB)
+                
+                else :
+                    colo =  'g'
+                    uh +=1
+                    amplit_rela_UH.append(max_UH)
+                    UH_abs.append(k)
+                    UH_abs_j.append(w_ind_UH)
+                    
+                    
+                # moy = np.mean(signal[0,:j],axis=1)
+                # std = np.std(signal[:,:j],axis=1)
+                # if signal[0,j]>moy[0]+std_tresh*std[0] or signal[1,j]>moy[1]+std_tresh*std[1]:
+                #     resultat.append(j)
+                #     ratio_UH = (signal[0,j]-moy[0])/std[0]
+                #     ratio_BB = (signal[1,j]-moy[1])/std[1]
+                #     harm_amp.append(temp[0,k,j])
+                #     if signal[0,j]>moy[0]+std_tresh*std[0] and signal[1,j]>moy[1]+std_tresh*std[1]:
+                #         both +=1
+                #         amplit_rela_UH.append(ratio_UH)
+                #         UH_abs.append(k)
+                #         UH_abs_j.append(j)
+                #         amplit_rela_BB.append(ratio_BB)
+                #         BB_abs.append(k)
+                #         BB_abs_j.append(j)
+                        
+                #     elif signal[1,j]>moy[1]+std_tresh*std[1] : 
+                #         bb +=1
+                #         amplit_rela_BB.append(ratio_BB)
+                #         BB_abs.append(k)
+                #         BB_abs_j.append(j)
+                #     else :
+                #         uh +=1
+                #         amplit_rela_UH.append(ratio_UH)
+                #         UH_abs.append(k)
+                #         UH_abs_j.append(j)
+                if plot_true:
+                    for i in range(n_plot):
+                        plt.plot(pression,temp_norm[i,k,:], c=redblue[i],label=label[i])
+                    
+                    if max_UH>0:
+                        plt.plot([0,pression[-1]],[moy_UH+std_tresh*moy_UH,moy_UH+std_tresh*moy_UH],c=redblue[1])
+                        plt.plot([w_ind_UH,w_ind_UH],[0,1],c='g')
+                    if max_BB>0:
+                        plt.plot([0,pression[-1]],[moy_BB+std_tresh*std_BB,moy_BB+std_tresh*std_BB],c=redblue[2])
+                        plt.plot([w_ind_BB,w_ind_BB],[0,1],c='r')
+                    plt.legend(fontsize=20)
+                    plt.title("Différentes composantes, pulse {}".format(k),color="black",fontsize=22, fontweight = 'bold')
+                    plt.xlabel('Pression (kPa)',fontsize=20)
+                    plt.xlabel('Fenêtres temporelles',fontsize=20)
+                    #plt.plot([t[0], t[-1]], [1.0, 1.0],  ls='--',linewidth=2, c=redblue[i]) # plt.plot((x1, x2), (y1, y2), 'k-')
+                    # Ymax = 1.01*np.amax(plot[:,:,1])
+                    # Ymin = 0.99*np.amin(plot[:,:,2])
+                    plt.ylim([0, 1]) 
+                    #plt.ylim([0, np.max(temp_norm[:,k,:])])
+                    #plt.xlim([0, 40])    
+                    plt.grid(True)
+                    plt.tight_layout()
+                    plt.yscale('linear')
+                    plt.savefig(chemin_lin+nom+'_{}.png'.format(k),bbox_inches='tight')
+                    plt.clf()
+                    #break
+        plt.scatter(UH_abs,amplit_rela_UH,c='green',marker = "x",s=100, linewidths = 2)
+        plt.scatter(BB_abs,amplit_rela_BB,c='red',marker = "x",s=100, linewidths = 2)
+        plt.title("Différents événements dépassant le seuil de bruit (pulses)", color='black',fontsize=30, fontweight = 'bold')
+        plt.xlabel("Pulses",fontsize=20)
+        plt.ylabel("ratio de STD supérieur à la moyenne du bruit", color="blue",fontsize=20) 
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('linear')
+        plt.savefig(chemin_lin+"00"+nom+'recap_std_n_pulse.png',bbox_inches='tight')
+        plt.clf()
+        plt.scatter(UH_abs_j,amplit_rela_UH,c='green',marker = "x",s=100, linewidths = 2)
+        plt.scatter(BB_abs_j,amplit_rela_BB,c='red',marker = "x",s=100, linewidths = 2)
+        plt.title("Différents événements dépassant le seuil de bruit (windows)",color='black',fontsize=30, fontweight = 'bold')
+        plt.xlabel("Fenêtre de déclenchement dans le pulse",fontsize=20)
+        plt.ylabel("ratio de STD supérieur à la moyenne du bruit", color="blue",fontsize=20) 
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('linear')
+        plt.savefig(chemin_lin+"00"+nom+'recap_std_window.png',bbox_inches='tight')
+        plt.clf()
+        plt.plot(harm_amp_BB,c='darkviolet', label = 'Dépassement BB')
+        plt.plot(harm_amp_UH,c='darkcyan', label = 'Dépassement UH')
+        plt.legend()
+        plt.title("Valeurs des harmoniques au moment du depassement de seuil",color='black',fontsize=30, fontweight = 'bold')
+        plt.ylabel("Valeur non normalisée de la composante harmonique", color="blue",fontsize=20) 
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('linear')
+        plt.savefig(chemin_lin+"00"+nom+'harm_value.png',bbox_inches='tight')
+        plt.clf()
+        plt.scatter(UH_abs_j,UH_abs,c='green',marker = "x",s=100, linewidths = 2)
+        plt.scatter(BB_abs_j,BB_abs,c='red',marker = "x",s=100, linewidths = 2)
+        plt.title("Position des différents événements (dans le pulse et dans le traitement)",color='black',fontsize=30, fontweight = 'bold')
+        plt.xlabel("Fenêtre de déclenchement dans le pulse",fontsize=20)
+        plt.ylabel("Pulses de déclenchement", color="blue",fontsize=20) 
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('linear')
+        plt.savefig(chemin_lin+"00"+nom+'recap_pulse_window.png',bbox_inches='tight')
+        plt.close("all") 
+        fig=plt.figure(figsize=(20,11))
+        plt.subplot(1,2,1)
+        plt.scatter(['UH' for j in amplit_rela_UH],amplit_rela_UH,c='green',marker = "o",s=100, linewidths = 2, alpha=0.15)
+        plt.scatter(['BB' for j in amplit_rela_BB],amplit_rela_BB,c='red',marker = "o",s=100, linewidths = 2, alpha=0.15)
+        plt.title("Différents événements durant le pulse (Linear)",color='black',fontsize=30, fontweight = 'bold')
+        plt.xlabel("Valeur de ration de STD",fontsize=20)
+        plt.ylabel("Type de déclenchement", color="blue",fontsize=20) 
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('linear')
+        plt.subplot(1,2,1)
+        plt.scatter(['UH' for j in amplit_rela_UH],amplit_rela_UH,c='green',marker = "o",s=100, linewidths = 2, alpha=0.15)
+        plt.scatter(['BB' for j in amplit_rela_BB],amplit_rela_BB,c='red',marker = "o",s=100, linewidths = 2, alpha=0.15)
+        plt.title("Différents événements durant le pulse (LOG)",color='black',fontsize=30, fontweight = 'bold')
+        plt.xlabel("Valeur de ration de STD",fontsize=20)
+        plt.ylabel("Type de déclenchement", color="blue",fontsize=20) 
+        plt.grid(True)
+        plt.tight_layout()
+        plt.yscale('log')
+        plt.savefig(chemin_lin+"00"+nom+'recap_pulse_ratio.png',bbox_inches='tight')
+        plt.close("all")     
+        print("déclenchement : UH {}, BB {}, UH&BB {}".format(uh,bb,both)) ,
+        if len(amplit_rela_UH)>0:
+            print("UH ratio de valeur de déclenchement : {} +- ".format(np.round(np.mean(amplit_rela_UH),decimals=2)),np.round(np.std(amplit_rela_UH),decimals=2))
+        if len(amplit_rela_BB)>0:
+            print("BB ratio de valeur de déclenchement : {} +- ".format(np.round(np.mean(amplit_rela_BB),decimals=2)),np.round(np.std(amplit_rela_BB),decimals=2))
+        print("fenêtre de déclenchement moyen UH : {}".format(np.mean(UH_abs_j)))
+        print("fenêtre de déclenchement median UH : {}".format(np.median(UH_abs_j))) 
+        print("fenêtre de déclenchement moyen BB : {}".format(np.mean(BB_abs_j)))
+        print("fenêtre de déclenchement median BB : {}".format(np.median(BB_abs_j)))
+             
 class experiment_mult():
     
     def __init__(self, fe, f0,start:int,end:int, size_window : int = 2048, n_harm : int = 4,delta_harm =50e3,delta_Uharm =50e3,peak_detection : bool =True, size_decal : int = 2048):
