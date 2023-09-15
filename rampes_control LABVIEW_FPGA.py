@@ -13,91 +13,40 @@ import gc
 
 gc.collect(generation=2)
 
-#VITRO
-tra = 'D:\\code_UH_long\\GENE_MOD\\iter_20\\'
-traj='D:\\code_UH_long\\GENE_MOD\\iter_20\\Analyse_TRI\\'
-traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\VIVO_rat409_291122_86\\Analyse_cut_end\\"
-tra = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\VIVO_rat409_291122_86\\"
-traj="C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\iter_20\\VIVO_rat409_291122_86\\Analyse_cut_end\\"
+start, start_detec, end = 55, 62, 150
+end_detec = 160
 
-
-tra0 = "D:\\data_vitro\\CONTROLE_RAMP\\20230207_PCDsig_Paul_Control_Bubbles\\"
-tra1 = "D:\\data_vitro\\CONTROLE_RAMP\\20230202_PCDsig_Corentin_bubbles_ampli_0\\"
-tra2 = "D:\\data_vitro\\CONTROLE_RAMP\\20230202_PCDsig_Paul_Water_ampli_0\\"
-tra3 = "D:\\data_vitro\\CONTROLE_RAMP\\20230202_PCDsig_Paul_Water_pasampli_0\\"
-tra4 = "D:\\data_vitro\\CONTROLE_RAMP\\20230202_PCDsig_Paul_Bubbles_ampli_0\\"
-tra5 = "D:\\data_vitro\\CONTROLE_RAMP\\20230202_PCDsig_Paul_Bubbles_ampli_0\\"
-tra6 = "D:\\data_vitro\\CONTROLE_RAMP\\20230202_PCDsig_Paul_Bubbles_ampli_0\\"
-tra7 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s4\\"
-tra8 = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\in_vitro\\data_vivo\\s5\\"
-
-
-def normalisation_harm(array):
-    return array/np.max(array)
-def noramlisation_Uharmonic(array, lim, val_mean, val_std, still_wind, std_tresh):
-    eta_1 = array/np.max(array)
-    lim_1 = lim/np.max(array)
-    eta_2 = eta_1*val_std/np.std(eta_1[:still_wind])/std_tresh
-    lim_2 = lim_1*val_std/np.std(eta_1[:still_wind])/std_tresh
-    eta_3 = eta_2-(np.mean(eta_2[:still_wind])-val_mean)
-    lim_3 = lim_2-(np.mean(eta_2[:still_wind])-val_mean)
-    return eta_3, lim_3
-
-sys.exit()
-
-#%%
-
-trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\transmission crane\\transmission_crane\\pk_control_fuckedup\\"
-path(trajet)
-
-
-legend = ["mouse_564_65"]
-legend = ["Paul Control bulles 07_02", "Corentin bulles baseline", "Paul eau ampli", "Paul eau sans ampli", "rat_463_36", "rat_445_75"]
-#%%VItro control plot fpga graphs
 plt.close('all')
-trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\transmission crane\\transmission_crane\\pk_control_fuckedup\\New_treatment_baseline\\"
+trajet = r'C:\Users\PM263553\Desktop\These\report\Manuscript\img\3_img\plot_python'
 path(trajet)
-tra4 = "F:\\mesure_cavitation_crane_exp_2\\20230426__Control_crane_POS1_30\\"
-tra44 = "F:\\mesure_cavitation_crane_exp_2\\20230426__Control_crane_POS1_30_bis\\"
-tra444 = "F:\\mesure_cavitation_crane_exp_2\\20230426__Control_crane_POS2_30\\"
-legend = ["control crane pos1 30 FPGA","control crane pos1 30 bis FPGA","control crane pos2 30 FPGA"]
-
-#%%VItro control plot fpga graphs
-plt.close('all')
-trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\transmission crane\\transmission_crane\\pk_control_fuckedup\\New_treatment_VIVO_BBBO\\"
-path(trajet)
-tra4 = "F:\\data_vivo\\20230601__603\\"
-tra44 = "F:\\data_vivo\\20230601__604\\"
-tra44 = "F:\\mesure_cavitation_crane_exp_2\\20230426__Control_crane_POS1_30_bis\\"
-tra444 = "F:\\mesure_cavitation_crane_exp_2\\20230426__Control_crane_POS2_30\\"
-legend = ["vivo baseline 603","vivo baseline 604","control crane pos2 30 FPGA"]
-
-#%%
-for i, tra in enumerate([tra4, tra44]): #, tra1[tra0, tra1, tra2, tra3]
-    traj = trajet + legend[i]+ "\\"
+tra = r"C:\Users\PM263553\Desktop\These\big_projects\in_vitro\data_vivo\control a plot"
+name = ["no retour.npy"] + ["avec control{}.npy".format(i+1) for i in range(8)] + ["mice_conv.npy"]
+legend = ["sans retour"] + ["control reduce "+str(i) for i in range(8)] + ["mice convergence"]
+for i in range(1): #, tra1[tra0, tra1, tra2, tra3], tra44, tra444
+    traj = trajet+ "\\" + legend[i]+ "\\"
     path(traj)
-    fit = np.array([4.66745471*2, 5.80567673])
-    fit = np.array([7.92060316*2, 2.42161125])    
-    start,end = 0,357000
-    pression_max = 1000
-    pression_min = 1
-    still_wind = 50
-    bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
-    bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
-    bitpress = int(np.round(((400-fit[1])/fit[0])))
-    press_max = 30*fit[0]+fit[1]
-    nbit=[1,30]
-    s_marker = 5
+    # fit = np.array([7.92060316*2, 2.42161125])    
+    # start,end = 0,357000
+    # pression_max = 1000
+    # pression_min = 1
+    # bitmax=int(np.round(((pression_max-fit[1])/fit[0])))
+    # bitmin=int(np.round(((pression_min-fit[1])/fit[0])))
+    # bitpress = int(np.round(((400-fit[1])/fit[0])))
+    # press_max = 30*fit[0]+fit[1]
+    # nbit=[1,30]
+
     print("\nLoading pulses......")
-    data_raw = np.load(tra+'\\BubblesArr.npy') #Bubbles #Control
+    data_raw = np.load(tra+"\\"+name[i]) #Bubbles #Control
+    print(np.shape(data_raw))
     data = data_raw #(np.transpose(data_raw[:,:]))
     # on récupère l'array avec les dimensions suivantes : (314, 32, 605)
     # je veux changer l'ordre des axes pour avoir (605, 32, 314)
     data = np.transpose(data, (2, 0, 1))
     print("Loading done!")    
-    plt.figure(figsize=(15,6))
-    n_plot = 200
-    for j in range(1,len(data),len(data)//n_plot):
+    n_plot = 50
+    plt.subplots(figsize=(10,7))
+    for j in range(0,len(data), len(data)//n_plot):
+        plt.clf()
         #Values
         DataArrays = data[j]
         ultra_32=(DataArrays[:,4])/16777216.
@@ -115,54 +64,45 @@ for i, tra in enumerate([tra4, tra44]): #, tra1[tra0, tra1, tra2, tra3]
         CUT_32=-(DataArrays[:,15])/1.
         CUT_BB=-(DataArrays[:,8])/1.
         intra_c=-(DataArrays[:,30])/1.
+
+        val = -1
+        val_l = []
+
+        for z in range(start_detec,end_detec):
+            if (ultra_32[z] > ultra_32_lim[z] or  ultra_52[z] > ultra_52_lim[z] or BB[z] > BB_lim[z]) and val == -1:
+                val = z
+                #val_l.append(z)
+            if val != -1 and z-val > 3:
+                C1F0[z] = C1F0[val-1]
+        #val_l = [98, 118, 119, 120]
+        if val == -1 or float(np.max(C1F0))<=0:
+            continue
+        #val = val_l[0]       
+        plt.plot(C1F0/float(np.max(C1F0)), c = 'blue', label = "Pression émise", linewidth = 3, marker = 'o', markersize = 10)
+        plt.scatter(val, C1F0[val]/float(np.max(C1F0)), c = 'red', s=450, label = "Pression non stable", marker='x', linewidths = 5)
+        plt.scatter(val-1, C1F0[val-1]/float(np.max(C1F0)), c = 'lime', s=450 , label = "Dernière pression stable", marker='x', linewidths = 5)
+        plt.plot([val,end],[C1F0[110]/float(np.max(C1F0)), C1F0[110]/float(np.max(C1F0))], c = 'orange', label = "Pression de stabilisation", linestyle = '--', linewidth = 1.8)          
+        # for elt in val_l[1:] :
+        #     plt.plot([elt, elt], [0,1], c = 'black', linestyle = '--', linewidth = 1.8)
         
-
-        std_tresh = 3
-        #calculus
-
-
-        ultra_32, ultra_32_lim = noramlisation_Uharmonic(ultra_32, ultra_32_lim, 0.05, 0.15, still_wind, 3)
-        ultra_52, ultra_52_lim = noramlisation_Uharmonic(ultra_52, ultra_52_lim,0.05, 0.15, still_wind, 3)
-        BB, BB_lim = noramlisation_Uharmonic(BB, BB_lim, 0.05, 0.15, still_wind, 3)
-        C1F0=normalisation_harm(C1F0)
-
-        n_fen = len(ultra_32)
-        moy_UH = np.mean(ultra_32[:still_wind])
-        moy_BB = np.mean(BB[:still_wind])
-        std_UH = np.std(ultra_32[:still_wind])
-        std_BB = np.std(BB[:still_wind])
-
-
-        if float(np.max(C1F0))<=0 :
-                 continue
-        
-        plt.fill_between([0,n_fen], [moy_UH+std_tresh*std_UH,moy_UH+std_tresh*std_UH], [moy_UH-std_tresh*std_UH,moy_UH-std_tresh*std_UH],color='g', alpha=0.1)
-
-        plt.fill_between([0,n_fen], [moy_BB+std_tresh*std_BB,moy_BB+std_tresh*std_BB], [moy_BB-std_tresh*std_BB,moy_BB-std_tresh*std_BB],color='r', alpha=0.1)
-
-        plt.plot(C1F0, c = 'dodgerblue', label = "Fondamental", marker = 'o', markersize = s_marker)
-        plt.plot(ultra_32, c = 'mediumseagreen', label = "Ultra-harmonique", marker = 'o', markersize = s_marker)      
-        plt.plot(ultra_32_lim, c = 'forestgreen', label = "Seuil ultra-harmonique")   
-        #ax.plot(ultra_52/float(np.max(ultra_52)), c = 'lime', label = "Ultraharmonic value 52")      
-        #ax.plot(ultra_52_lim/float(np.max(ultra_52)), c = 'lime', label = "Seuil ultra_52")      
-        plt.plot(BB, c = 'orangered', label = "Bruit large bande", marker = 'o', markersize = s_marker)
-        plt.plot(BB_lim, c = 'firebrick', label = "Seuil Bruit large bande")              
-
-        plt.legend(fontsize=15)
+        plt.plot([val, val], [0,1], c = 'black', label = "Détection de cavitation", linestyle = '--', linewidth = 1.8)
+        plt.legend(fontsize=15, loc = 'lower left')
         plt.ylim(0,1.1)
-        
-        plt.xlim(0,280)
         plt.grid(True, which='major')
-        plt.ylabel("Amplitude normalisées", fontsize=20)
+        plt.ylabel("Valeurs normalisées", fontsize=20)
         plt.xlabel("Fenêtres", fontsize=20)
-        plt.xticks(fontsize= 15)
-        plt.yticks(fontsize= 15)
-        plt.title('Tirs : {}'.format(j) ,fontsize=22, fontweight = 'bold')
+        plt.xticks(fontsize= 18)
+        plt.yticks(fontsize= 18)
+        #plt.title('Tir numéro {}'.format(j) ,fontsize=22, fontweight = 'bold')
+        plt.xlim(start,end)
         plt.savefig(traj+"pulse_{}".format(j),bbox_inches='tight')
-        plt.xlim(55,160)
+        plt.xlim(val-4,val+7)
+        #plt.xlim(val-4,128)
+        plt.legend('',frameon=False)
+        plt.ylim(C1F0[val-4]/float(np.max(C1F0))*0.97 ,1.03)
         plt.savefig(traj+"Zoom_pulse_{}".format(j),bbox_inches='tight')
-        plt.clf()
-    plt.close('all')
+    plt.close("all")
+sys.exit()
 #%%VItro control
 trajet = "C:\\Users\\PM263553\\Desktop\\These\\big_projects\\transmission crane\\transmission_crane\\pk_control_fuckedup\\"
 path(trajet)
