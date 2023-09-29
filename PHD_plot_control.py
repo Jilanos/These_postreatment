@@ -24,7 +24,7 @@ path(traj_plot)
 #%%
 # start = 50000
 window = 2048
-decalage = 1024
+decalage = 1280
 f0 = 0.1
 n = 4
 signal = np.zeros((n,window))
@@ -53,7 +53,7 @@ plt.ylabel('Amplitude', fontsize=18)
 plt.xticks(fontsize=16)
 plt.yticks(fontsize=16)
 plt.grid(True)
-plt.xlim(0, 5000)
+plt.xlim(0, 5888)
 
 
 
@@ -66,7 +66,7 @@ plt.ylabel('Amplitude', fontsize=18)
 plt.xticks(fontsize=16)
 plt.yticks(fontsize=16)
 plt.grid(True)
-plt.xlim(0, 5000)
+plt.xlim(0, 5888)
 plt.savefig(traj_plot+'signal_hanning.png', bbox_inches='tight')
 
 
